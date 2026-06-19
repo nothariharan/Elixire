@@ -1,0 +1,74 @@
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# secrets & local config
+.env
+.env.local
+.env.*.local
+elixir/.env
+api_keys.md
+*.pem
+*.key
+credentials.json
+
+# databases & runtime artifacts
+*.db
+*.db-shm
+*.db-wal
+*.sqlite3
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.wakatime-project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# documentation (not tracked)
+.firecrawl/
+README.md
+CLAUDE.md
+SUBMISSION.md
+elixir.md
+ISSUES.md
+NOTEBOOKLM-README.md
+ELIXIRE-*.md
+elixir/implementation_plan.md
+
+# private docs & reports (keep repo lean)
+last30days-skill/
+elixir_final_prd.html
+elixir_architecture_synthesis_report.md
+elixir/api_health_report.md
+elixir/*.db.bak*
+
+# logs & runtime output
+*.log
+logs/
+uvicorn_*.log
+elixir/band_agents/logs/
+elixir/static/prescriptions/
+
+# local editor / agent tooling
+.claude/
+
+# band per-agent credentials
+elixir/band_agents/**/agent_config.yaml
+agent_config.yaml
