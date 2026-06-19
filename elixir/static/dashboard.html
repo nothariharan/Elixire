@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elixire — Doctor Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #0F9F7A;
+    --accent-dim: rgba(15,159,122,.1);
+    --accent-hover: #0D8A6A;
+    --bg: #FFFFFF;
+    --bg-2: #F7F9FC;
+    --bg-3: #EEF2F8;
+    --text: #111827;
+    --text-2: #6B7280;
+    --text-3: #9CA3AF;
+    --border: #E5E7EB;
+    --border-2: #D1D5DB;
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --success: #10B981;
+    --success-bg: #D1FAE5;
+    --warning: #F59E0B;
+    --warning-bg: #FEF3C7;
+    --r: 8px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    height: 50px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 7px; }
+  .logo-mark {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 13px;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+  .logo-text span { color: var(--accent); }
+
+  .nav-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+  .nav-label {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .nav-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .nav-btn:hover { background: var(--bg-2); color: var(--text); }
+  .nav-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .nav-btn.primary:hover { background: var(--accent-hover); }
+
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 2px rgba(16,185,129,.2);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(16,185,129,.2); }
+    50% { box-shadow: 0 0 0 4px rgba(16,185,129,.08); }
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 256px;
+    min-width: 256px;
+    border-right: 1px solid var(--border);
+    background: var(--bg-2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-head {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .patient-count {
+    background: var(--bg-3);
+    border-radius: 20px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  .sidebar-search {
+    position: relative;
+  }
+  .sidebar-search input {
+    width: 100%;
+    padding: 7px 10px 7px 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .sidebar-search input:focus { border-color: var(--accent); }
+  .sidebar-search::before {
+    content: '🔍';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  .patient-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .patient-item {
+    padding: 10px 10px;
+    border-radius: var(--r);
+    cursor: pointer;
+    margin-bottom: 2px;
+    transition: background .12s;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .patient-item:hover { background: var(--bg-3); }
+  .patient-item.selected {
+    background: var(--accent-dim);
+    border-color: rgba(15,159,122,.18);
+  }
+
+  .pi-row { display: flex; align-items: center; gap: 6px; }
+  .pi-name { font-size: 12.5px; font-weight: 500; flex: 1; }
+  .pi-apt { font-size: 11px; color: var(--text-3); }
+  .pi-time { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+
+  .status-pill {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill-intake    { background: #FEF3C7; color: #92400E; }
+  .pill-brief     { background: var(--accent-dim); color: var(--accent); }
+  .pill-consulted { background: var(--success-bg); color: #065F46; }
+  .pill-rx        { background: #EDE9FE; color: #5B21B6; }
+  .pill-waiting   { background: var(--bg-3); color: var(--text-2); }
+
+  .sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .btn-block {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: var(--r);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    background: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-block:hover { background: var(--accent-hover); }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .main-header {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .mh-patient h2 { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
+  .mh-patient p  { font-size: 11px; color: var(--text-2); }
+
+  .agent-timeline {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .agent-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    background: var(--bg-2);
+    color: var(--text-3);
+    transition: all .3s;
+    white-space: nowrap;
+  }
+  .agent-pill .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-3);
+    flex-shrink: 0;
+    transition: all .3s;
+  }
+  .agent-pill.active { background: var(--accent-dim); color: var(--accent); }
+  .agent-pill.active .dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+    animation: pulse-dot 1.5s infinite;
+  }
+  .agent-pill.done { background: var(--success-bg); color: #065F46; }
+  .agent-pill.done .dot { background: var(--success); box-shadow: none; animation: none; }
+  .tl-arrow { color: var(--border-2); font-size: 10px; }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-3);
+    text-align: center;
+    gap: 10px;
+    padding: 40px;
+  }
+  .empty-icon { font-size: 36px; opacity: .4; }
+  .empty-state h3 { font-size: 14px; font-weight: 500; color: var(--text-2); }
+  .empty-state p { font-size: 12px; max-width: 220px; }
+
+  /* Chat log in main area */
+  .chat-log-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 8px;
+  }
+
+  .chat-msg { display: flex; flex-direction: column; gap: 3px; max-width: 80%; margin-bottom: 10px; }
+  .chat-msg.patient { align-self: flex-end; align-items: flex-end; }
+  .chat-msg.ai { align-self: flex-start; }
+
+  .msg-agent { font-size: 9px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); padding: 0 3px; }
+  .msg-text {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .chat-msg.ai .msg-text   { background: var(--bg-2); border: 1px solid var(--border); border-radius: 3px 10px 10px 10px; }
+  .chat-msg.patient .msg-text { background: var(--accent); color: white; border-radius: 10px 3px 10px 10px; }
+
+  /* ── RIGHT PANEL ── */
+  .panel {
+    width: 320px;
+    min-width: 320px;
+    border-left: 1px solid var(--border);
+    background: var(--bg-2);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .panel-block { border-bottom: 1px solid var(--border); }
+
+  .panel-head {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s;
+  }
+  .panel-head:hover { background: var(--bg-3); }
+  .panel-head-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    flex: 1;
+  }
+  .ph-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 20px;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .panel-body { padding: 0 14px 14px; display: none; }
+  .panel-body.open { display: block; }
+
+  /* Brief Card */
+  .brief-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+
+  .bc-row {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .bc-row:last-child { border-bottom: none; }
+  .bc-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 3px;
+  }
+  .bc-value { font-size: 12.5px; color: var(--text); line-height: 1.5; }
+
+  .bc-flag {
+    background: var(--warning-bg);
+    border-top: 1px solid #FDE68A;
+    padding: 8px 12px;
+  }
+  .bc-flag .bc-label { color: #92400E; }
+  .bc-flag .bc-value { color: #78350F; font-size: 12px; }
+
+  .btn-room {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--r);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    text-align: center;
+  }
+  .btn-room:hover { background: var(--accent-hover); }
+  .btn-room.done { background: var(--bg-3); color: var(--text-2); pointer-events: none; cursor: default; }
+
+  /* Consultation Form */
+  .consult-field { margin-bottom: 10px; }
+  .consult-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-bottom: 4px;
+  }
+  .consult-field input, .consult-field textarea, .consult-field select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .consult-field input:focus, .consult-field textarea:focus, .consult-field select:focus {
+    border-color: var(--accent);
+  }
+  .consult-field textarea { resize: vertical; min-height: 56px; }
+  .consult-field .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .med-list { margin-bottom: 8px; }
+  .med-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .med-item .rm-btn {
+    position: absolute; top: 6px; right: 6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-2);
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .12s;
+  }
+  .med-item .rm-btn:hover { background: var(--danger-bg); color: var(--danger); }
+  .med-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px; }
+  .med-f label { font-size: 10px; color: var(--text-3); display: block; margin-bottom: 2px; }
+  .med-f input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 11.5px;
+    color: var(--text);
+    outline: none;
+    background: var(--bg-2);
+    transition: border-color .15s;
+  }
+  .med-f input:focus { border-color: var(--accent); background: var(--bg); }
+
+  .btn-add-med {
+    width: 100%;
+    padding: 6px;
+    border: 1.5px dashed var(--border-2);
+    border-radius: var(--r);
+    background: none;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all .15s;
+    margin-bottom: 10px;
+  }
+  .btn-add-med:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .btn-gen-rx {
+    width: 100%;
+    padding: 9px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--r);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-gen-rx:hover { background: var(--accent-hover); }
+  .btn-gen-rx:disabled { opacity: .5; pointer-events: none; }
+
+  /* Prescription */
+  .rx-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .rx-card-head {
+    padding: 9px 12px;
+    background: var(--success-bg);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid #A7F3D0;
+  }
+  .rx-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .rx-badge.ok { background: var(--success); color: white; }
+  .rx-badge.warn { background: var(--warning); color: white; }
+  .rx-body { padding: 10px 12px; font-size: 12px; }
+  .rx-body h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin: 8px 0 4px; }
+  .rx-med { padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .rx-med:last-child { border-bottom: none; }
+  .rx-med-name { font-weight: 500; color: var(--text); }
+  .rx-med-details { font-size: 11px; color: var(--text-2); }
+  .rx-actions { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--border); }
+  .btn-rx { flex: 1; padding: 7px; border-radius: var(--r); font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all .15s; text-align: center; }
+  .btn-rx.primary { background: var(--accent); color: white; border: none; }
+  .btn-rx.primary:hover { background: var(--accent-hover); }
+  .btn-rx.secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+  .btn-rx.secondary:hover { background: var(--bg-2); }
+
+  /* Placeholder */
+  .panel-placeholder {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-3);
+  }
+  .panel-placeholder .ph-icon { font-size: 24px; opacity: .4; margin-bottom: 8px; }
+  .panel-placeholder p { font-size: 11px; max-width: 180px; margin: 0 auto; }
+
+  /* Setup overlay */
+  .setup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .setup-overlay.visible { display: flex; }
+  .setup-modal {
+    background: var(--bg);
+    border-radius: var(--r-lg);
+    padding: 28px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+  }
+  .setup-modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .setup-modal .sub { font-size: 12px; color: var(--text-2); margin-bottom: 20px; }
+  .sf { margin-bottom: 12px; }
+  .sf label { display: block; font-size: 11px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+  .sf input, .sf select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color .15s;
+  }
+  .sf input:focus, .sf select:focus { border-color: var(--accent); }
+  .sf .sf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sf-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-modal { flex: 1; padding: 9px; border-radius: var(--r); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; }
+  .btn-modal.primary { background: var(--accent); color: white; }
+  .btn-modal.primary:hover { background: var(--accent-hover); }
+  .btn-modal.secondary { background: var(--bg-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-modal.secondary:hover { background: var(--bg-3); }
+  .btn-modal:disabled { opacity: .45; pointer-events: none; }
+
+  /* ── WIZARD ── */
+  .wizard-steps { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+  .wizard-step { flex: 1; text-align: center; font-size: 10.5px; font-weight: 500; color: var(--text-3); position: relative; padding-bottom: 10px; }
+  .wizard-step::after { content: ''; position: absolute; bottom: -15px; left: 0; right: 0; height: 2px; background: var(--border); transition: background .2s; }
+  .wizard-step.active { color: var(--accent); font-weight: 600; }
+  .wizard-step.active::after { background: var(--accent); }
+  .wizard-step.done { color: var(--success); }
+  .wizard-step.done::after { background: var(--success); }
+  .wz-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-3); color: var(--text-3); font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+  .wizard-step.active .wz-num { background: var(--accent); color: white; }
+  .wizard-step.done .wz-num { background: var(--success); color: white; }
+
+  /* Specialty cards (Step 1) */
+  .specialty-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .specialty-card { padding: 14px 10px; border: 1.5px solid var(--border); border-radius: var(--r-md); cursor: pointer; transition: all .15s; text-align: center; }
+  .specialty-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .specialty-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .sc-icon { font-size: 22px; margin-bottom: 5px; }
+  .sc-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .sc-sub { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+  /* Doc requirement toggles (Step 3) */
+  .doc-toggle { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 6px; }
+  .doc-toggle-info { flex: 1; }
+  .doc-toggle-label { font-size: 12px; font-weight: 500; color: var(--text); }
+  .doc-toggle-desc { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+  .toggle-switch { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+  .toggle-switch input { display: none; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border-2); border-radius: 20px; cursor: pointer; transition: background .2s; }
+  .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+  .toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: white; transition: transform .2s; }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+
+  /* Clinic Key display (Step 4) */
+  .key-display { background: #0D1117; border-radius: var(--r-md); padding: 20px; text-align: center; margin-bottom: 14px; }
+  .key-uuid { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .06em; word-break: break-all; margin-bottom: 10px; }
+  .key-copy-btn { padding: 6px 16px; background: var(--accent); color: white; border: none; border-radius: var(--r); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .patient-instructions { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .patient-instructions code { font-family: 'Courier New', monospace; font-size: 11px; color: var(--accent); word-break: break-all; }
+
+  /* Sidebar clinic key widget */
+  .sidebar-clinic-key { padding: 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .sck-label { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; }
+  .sck-key { font-family: 'Courier New', monospace; font-size: 9.5px; color: var(--text-2); background: var(--bg-3); border-radius: 5px; padding: 5px 8px; word-break: break-all; margin-bottom: 5px; }
+  .sck-copy { width: 100%; padding: 5px; background: none; border: 1px solid var(--border); border-radius: var(--r); font-family: inherit; font-size: 11px; color: var(--text-2); cursor: pointer; transition: all .15s; }
+  .sck-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--text);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all .2s;
+    z-index: 200;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="logo">
+    <div class="logo-mark">E</div>
+    <div class="logo-text">Elixi<span>re</span></div>
+  </div>
+  <div class="nav-sep"></div>
+  <span class="nav-label" id="nav-clinic">Doctor Dashboard</span>
+  <div class="nav-right">
+    <div class="live-dot" title="Live updates every 5s"></div>
+    <button class="nav-btn" onclick="openSetup()">⚙ Setup Clinic</button>
+    <a href="/" target="_blank" class="nav-btn">Patient Portal ↗</a>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR: Patient Queue -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-title">
+        Today's Patients
+        <span class="patient-count" id="patient-count">0</span>
+      </div>
+      <div class="sidebar-search">
+        <input type="text" placeholder="Search patients…" oninput="filterPatients(this.value)" id="search-input">
+      </div>
+    </div>
+
+    <div class="patient-list" id="patient-list">
+      <div style="padding:20px;text-align:center;color:var(--text-3);font-size:12px">
+        Loading patients…
+      </div>
+    </div>
+
+    <!-- Clinic Key Widget (shown after setup) -->
+    <div class="sidebar-clinic-key" id="sidebar-clinic-key" style="display:none">
+      <div class="sck-label">🔑 Clinic Key</div>
+      <div class="sck-key" id="sck-key-text">—</div>
+      <button class="sck-copy" onclick="copySidebarKey()">Copy Key</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-block" id="new-patient-btn" onclick="openNewPatientTab()">+ New Patient Session</button>
+    </div>
+  </aside>
+
+  <!-- MAIN: Chat Log -->
+  <main class="main">
+    <div class="main-header" id="main-header">
+      <div class="mh-patient">
+        <h2 id="mh-name">No patient selected</h2>
+        <p id="mh-apt" style="color:var(--text-3)">Select a patient from the queue</p>
+      </div>
+      <div class="agent-timeline" id="agent-timeline" style="display:none">
+        <div class="agent-pill" id="ap-receptionist"><span class="dot"></span>Receptionist</div>
+        <span class="tl-arrow">›</span>
+        <div class="agent-pill" id="ap-intake"><span class="dot"></span>Intake</div>
+        <span class="tl-arrow">›</span>
+        <div class="agent-pill" id="ap-brief"><span class="dot"></span>Brief</div>
+        <span class="tl-arrow">›</span>
+        <div class="agent-pill" id="ap-done"><span class="dot"></span>Done</div>
+      </div>
+    </div>
+
+    <div class="main-content" id="main-content">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🩺</div>
+        <h3>No patient selected</h3>
+        <p>Select a patient from the queue to view their intake session and brief.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="panel" id="panel">
+
+    <div class="panel-block">
+      <div class="panel-head" onclick="togglePanelBlock(this)">
+        <span class="panel-head-title">Doctor Brief</span>
+        <span class="ph-badge" id="brief-badge" style="display:none">Ready</span>
+        <span>›</span>
+      </div>
+      <div class="panel-body open" id="brief-body">
+        <div class="panel-placeholder">
+          <div class="ph-icon">📋</div>
+          <p>Brief will appear here when intake is complete</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-block" id="consult-block" style="display:none">
+      <div class="panel-head" onclick="togglePanelBlock(this)">
+        <span class="panel-head-title">Consultation</span>
+        <span>›</span>
+      </div>
+      <div class="panel-body open" id="consult-body">
+        <div class="consult-field">
+          <label>Diagnosis</label>
+          <input type="text" id="c-diagnosis" placeholder="e.g. Myopia with presbyopia">
+        </div>
+        <div class="consult-field">
+          <label>Clinical Notes</label>
+          <textarea id="c-notes" placeholder="Findings, vitals, observations…"></textarea>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px">
+          Medications
+        </div>
+        <div class="med-list" id="med-list"></div>
+        <button class="btn-add-med" onclick="addMed()">+ Add Medication</button>
+
+        <div class="consult-field">
+          <label>Follow-up</label>
+          <div class="row2">
+            <input type="date" id="c-followup-date">
+            <input type="text" id="c-followup-inst" placeholder="Return in 6 months">
+          </div>
+        </div>
+
+        <button class="btn-gen-rx" id="gen-rx-btn" onclick="generateRx()">
+          Generate Prescription
+        </button>
+      </div>
+    </div>
+
+    <div class="panel-block" id="rx-block" style="display:none">
+      <div class="panel-head" onclick="togglePanelBlock(this)">
+        <span class="panel-head-title">Prescription</span>
+        <span class="ph-badge" style="background:var(--success-bg);color:var(--success);display:none" id="rx-badge-head">Done</span>
+        <span>›</span>
+      </div>
+      <div class="panel-body open" id="rx-body-block">
+        <div class="rx-card" id="rx-card">
+          <div class="rx-card-head">
+            <span class="rx-badge ok" id="rx-verified-badge">✓ AML Verified</span>
+          </div>
+          <div class="rx-body" id="rx-body-content"></div>
+          <div class="rx-actions">
+            <button class="btn-rx primary" onclick="downloadRx()">↓ PDF</button>
+            <button class="btn-rx secondary" onclick="sendWhatsApp()">WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- SETUP WIZARD MODAL -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-modal" style="max-width:520px">
+
+    <!-- Step indicators -->
+    <div class="wizard-steps" id="wizard-steps">
+      <div class="wizard-step active" id="ws-1"><div class="wz-num">1</div><br>Specialty</div>
+      <div class="wizard-step" id="ws-2"><div class="wz-num">2</div><br>Details</div>
+      <div class="wizard-step" id="ws-3"><div class="wz-num">3</div><br>Requirements</div>
+      <div class="wizard-step" id="ws-4"><div class="wz-num">4</div><br>Clinic Key</div>
+    </div>
+
+    <!-- Step 1: Specialty -->
+    <div id="wstep-1">
+      <h2>Choose Specialty</h2>
+      <p class="sub">This loads the right intake questions and document requirements for your clinic.</p>
+      <div class="specialty-grid">
+        <div class="specialty-card" onclick="selectSpecialty('general_practice', this)">
+          <div class="sc-icon">🩺</div>
+          <div class="sc-name">General Practice</div>
+          <div class="sc-sub">Primary care, consultations</div>
+        </div>
+        <div class="specialty-card" onclick="selectSpecialty('ophthalmology', this)">
+          <div class="sc-icon">👁</div>
+          <div class="sc-name">Ophthalmology</div>
+          <div class="sc-sub">Eye exams, vision care</div>
+        </div>
+        <div class="specialty-card" onclick="selectSpecialty('dental', this)">
+          <div class="sc-icon">🦷</div>
+          <div class="sc-name">Dental</div>
+          <div class="sc-sub">Checkups, extractions, RCT</div>
+        </div>
+        <div class="specialty-card" onclick="selectSpecialty('cardiology', this)">
+          <div class="sc-icon">🫀</div>
+          <div class="sc-name">Cardiology</div>
+          <div class="sc-sub">Cardiac consultation, ECG</div>
+        </div>
+        <div class="specialty-card" onclick="selectSpecialty('custom', this)">
+          <div class="sc-icon">⚙</div>
+          <div class="sc-name">Custom</div>
+          <div class="sc-sub">Define your own protocol</div>
+        </div>
+      </div>
+      <div class="sf-actions">
+        <button class="btn-modal secondary" onclick="closeSetup()">Cancel</button>
+        <button class="btn-modal primary" id="w1-next" onclick="wizardNext()" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Clinic Details -->
+    <div id="wstep-2" style="display:none">
+      <h2>Clinic Details</h2>
+      <p class="sub">This information appears on patient intake and prescriptions.</p>
+      <div class="sf">
+        <label>Clinic Name *</label>
+        <input type="text" id="s-name" placeholder="Dr. Sharma Dental Clinic">
+      </div>
+      <div class="sf">
+        <div class="sf-row">
+          <div>
+            <label>Doctor Name *</label>
+            <input type="text" id="s-doctor" placeholder="Dr. Priya Sharma">
+          </div>
+          <div>
+            <label>Specialty</label>
+            <input type="text" id="s-specialty-display" readonly style="background:var(--bg-2);color:var(--text-2)">
+          </div>
+        </div>
+      </div>
+      <div class="sf">
+        <label>Qualifications</label>
+        <input type="text" id="s-qual" placeholder="BDS, MDS (Oral Surgery)">
+      </div>
+      <div class="sf">
+        <div class="sf-row">
+          <div>
+            <label>Clinic Address</label>
+            <input type="text" id="s-address" placeholder="123 MG Road, Bengaluru">
+          </div>
+          <div>
+            <label>Phone</label>
+            <input type="tel" id="s-phone" placeholder="+91 98765 43210">
+          </div>
+        </div>
+      </div>
+      <div class="sf-actions">
+        <button class="btn-modal secondary" onclick="wizardBack()">← Back</button>
+        <button class="btn-modal primary" onclick="wizardNext()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Document Requirements -->
+    <div id="wstep-3" style="display:none">
+      <h2>Document Requirements</h2>
+      <p class="sub" id="w3-sub">Review required documents for your specialty. Toggle to change required/optional.</p>
+      <div id="w3-docs-container" style="margin-bottom:14px">
+        <div style="color:var(--text-3);font-size:12px;text-align:center;padding:16px">Loading…</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:7px">Appointment Types Included</div>
+        <div id="w3-apt-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+      </div>
+      <div class="sf-actions">
+        <button class="btn-modal secondary" onclick="wizardBack()">← Back</button>
+        <button class="btn-modal primary" id="w3-save-btn" onclick="saveClinic()">Save &amp; Generate Key →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Clinic Key -->
+    <div id="wstep-4" style="display:none">
+      <h2>Your Clinic Key</h2>
+      <p class="sub">Share this key with patients so they access your customized intake portal.</p>
+      <div class="key-display">
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase">Clinic Key</div>
+        <div class="key-uuid" id="w4-key">—</div>
+        <button class="key-copy-btn" onclick="copyClinicKey()">Copy Key</button>
+      </div>
+      <div class="patient-instructions">
+        <strong>How patients use this:</strong><br>
+        Direct link: <code id="w4-direct-url">—</code><br>
+        Or visit the portal URL and paste the key when prompted.
+      </div>
+      <div class="sf-actions" style="margin-top:14px">
+        <button class="btn-modal secondary" onclick="closeSetup()">Done</button>
+        <button class="btn-modal primary" onclick="copyDirectLink()">Copy Patient Link</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const DS = {
+  clinicId: localStorage.getItem('elixire_clinic_id') || null,
+  sessions: [],
+  selectedId: null,
+  selectedSession: null,
+  pollTimer: null,
+};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  if (DS.clinicId) {
+    document.getElementById('nav-clinic').textContent = localStorage.getItem('elixire_clinic_name') || 'Dashboard';
+    updateSidebarKey(DS.clinicId);
+  }
+  await loadSessions();
+  startPolling();
+});
+
+// ── POLLING ───────────────────────────────────────────────────────────────────
+function startPolling() {
+  // Queue refresh every 5s
+  DS.queueTimer = setInterval(loadSessions, 5000);
+
+  // Fast-poll selected session every 2s while still in-progress
+  DS.activeTimer = setInterval(async () => {
+    if (!DS.selectedId || !DS.selectedSession) return;
+    const cur = DS.selectedSession;
+    if (['brief_ready', 'consulted', 'prescription_ready'].includes(cur.status)) return;
+
+    try {
+      const r = await fetch(`/sessions/${DS.selectedId}`);
+      if (!r.ok) return;
+      const fresh = await r.json();
+      if (fresh.status !== cur.status) {
+        DS.selectedSession = fresh;
+        renderRightPanel();
+        setAgentStepFromLog(fresh);
+        if (fresh.status === 'brief_ready') {
+          showToast('📋 Brief ready — ' + (fresh.patient_name || 'Patient'));
+          const briefBody = document.getElementById('brief-body');
+          if (briefBody && !briefBody.classList.contains('open')) briefBody.classList.add('open');
+        }
+        await loadSessions();
+      }
+    } catch {}
+  }, 2000);
+}
+
+window.addEventListener('beforeunload', () => {
+  clearInterval(DS.queueTimer);
+  clearInterval(DS.activeTimer);
+});
+
+async function loadSessions() {
+  try {
+    const url = DS.clinicId ? `/sessions?clinic_id=${DS.clinicId}` : '/sessions';
+    const r = await fetch(url);
+    const data = await r.json();
+    DS.sessions = data.sessions || [];
+    renderPatientList(DS.sessions);
+  } catch {
+    // silently ignore if server offline
+  }
+}
+
+// ── PATIENT LIST ──────────────────────────────────────────────────────────────
+function renderPatientList(sessions) {
+  const list = document.getElementById('patient-list');
+  document.getElementById('patient-count').textContent = sessions.length;
+
+  if (!sessions.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-3);font-size:12px">No patients today<br><span style="font-size:11px">Share the patient link to get started</span></div>';
+    return;
+  }
+
+  list.innerHTML = sessions.map(s => `
+    <div class="patient-item${s.thread_id === DS.selectedId ? ' selected' : ''}" onclick="selectSession('${s.thread_id}')">
+      <div class="pi-row">
+        <span class="pi-name">${s.patient_name || 'Unknown'}</span>
+        <span class="status-pill pill-${statusClass(s.status)}">${statusLabel(s.status)}</span>
+      </div>
+      <div class="pi-row">
+        <span class="pi-apt">${s.appointment_type?.replace(/_/g,' ') || 'General'}</span>
+        <span class="pi-time">${timeAgo(s.created_at)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterPatients(q) {
+  const filtered = DS.sessions.filter(s =>
+    !q || (s.patient_name || '').toLowerCase().includes(q.toLowerCase())
+  );
+  renderPatientList(filtered);
+}
+
+function statusClass(s) {
+  const m = { intake: 'intake', brief_ready: 'brief', consulted: 'consulted', prescription_ready: 'rx', waiting: 'waiting' };
+  return m[s] || 'waiting';
+}
+function statusLabel(s) {
+  const m = { intake: 'Intake', brief_ready: 'Brief Ready', consulted: 'Consulted', prescription_ready: 'Rx Done', waiting: 'Waiting' };
+  return m[s] || s || 'Waiting';
+}
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diff < 1) return 'just now';
+  if (diff < 60) return `${diff}m ago`;
+  return `${Math.floor(diff/60)}h ago`;
+}
+
+// ── SESSION SELECT ────────────────────────────────────────────────────────────
+async function selectSession(threadId) {
+  DS.selectedId = threadId;
+  renderPatientList(DS.sessions);
+
+  // Fetch full session (with chat_log)
+  try {
+    const r = await fetch(`/sessions/${threadId}`);
+    const data = await r.json();
+    DS.selectedSession = data;
+    renderSession(data);
+  } catch {
+    const s = DS.sessions.find(x => x.thread_id === threadId);
+    if (s) { DS.selectedSession = s; renderSession(s); }
+  }
+}
+
+function setAgentStepFromLog(s) {
+  let chatLog = [];
+  try { chatLog = JSON.parse(s.chat_log || '[]'); } catch {}
+  const agentNames = new Set(chatLog.map(m => (m.agent || '').toLowerCase()));
+
+  let activeIdx = 0;
+  if (agentNames.has('elixire-receptionist') || agentNames.has('ai receptionist')) activeIdx = 1;
+  if (agentNames.has('elixire-intake') || agentNames.has('ai intake nurse')) activeIdx = 2;
+  if (s.doctor_brief || s.status === 'brief_ready' || agentNames.has('elixire-brief')) activeIdx = 3;
+  if (['consulted', 'prescription_ready'].includes(s.status)) activeIdx = 4;
+
+  const order = ['receptionist', 'intake', 'brief', 'done'];
+  order.forEach((p, i) => {
+    const el = document.getElementById(`ap-${p}`);
+    if (!el) return;
+    el.className = 'agent-pill';
+    if (i < activeIdx) el.classList.add('done');
+    else if (i === activeIdx) el.classList.add('active');
+  });
+}
+
+function renderSession(s) {
+  // Top bar
+  document.getElementById('mh-name').textContent = s.patient_name || 'Patient';
+  document.getElementById('mh-apt').textContent = s.appointment_type?.replace(/_/g,' ') || '';
+  document.getElementById('agent-timeline').style.display = 'flex';
+  setAgentStepFromLog(s);
+
+  // Main content: chat log
+  const content = document.getElementById('main-content');
+  document.getElementById('empty-state').style.display = 'none';
+
+  let chatLog = [];
+  try { chatLog = JSON.parse(s.chat_log || '[]'); } catch {}
+
+  let html = `<div class="chat-log-title">Intake Conversation</div>`;
+  if (chatLog.length) {
+    html += chatLog.map(m => `
+      <div class="chat-msg ${m.role}">
+        ${m.role === 'ai' ? `<div class="msg-agent">${m.agent || 'Elixire'}</div>` : ''}
+        <div class="msg-text">${escHtml(m.text)}</div>
+      </div>
+    `).join('');
+  } else {
+    html += `<div style="font-size:12px;color:var(--text-3);text-align:center;padding:20px">No chat history yet</div>`;
+  }
+  content.innerHTML = html;
+  content.scrollTop = content.scrollHeight;
+
+  renderRightPanel();
+}
+
+function renderRightPanel() {
+  const s = DS.selectedSession;
+  if (!s) return;
+
+  // Brief
+  const briefBody = document.getElementById('brief-body');
+  const briefBadge = document.getElementById('brief-badge');
+
+  if (s.doctor_brief) {
+    briefBadge.style.display = '';
+    briefBody.innerHTML = renderBriefCard(s);
+  } else {
+    briefBadge.style.display = 'none';
+    briefBody.innerHTML = '<div class="panel-placeholder"><div class="ph-icon">📋</div><p>Brief will appear when intake is complete</p></div>';
+  }
+
+  // Consultation form
+  const consultBlock = document.getElementById('consult-block');
+  if (s.status === 'brief_ready' || s.status === 'consulted' || s.status === 'prescription_ready') {
+    consultBlock.style.display = '';
+    if (s.diagnosis) document.getElementById('c-diagnosis').value = s.diagnosis;
+  } else {
+    consultBlock.style.display = 'none';
+  }
+
+  // Prescription
+  const rxBlock = document.getElementById('rx-block');
+  if (s.status === 'prescription_ready' && s.prescription_draft) {
+    rxBlock.style.display = '';
+    document.getElementById('rx-badge-head').style.display = '';
+    renderRxCard(s);
+  } else {
+    rxBlock.style.display = 'none';
+  }
+}
+
+function renderBriefCard(s) {
+  let brief = s.doctor_brief || '';
+  // Parse structured brief if it looks like JSON
+  let parsed = null;
+  try { if (brief.trim().startsWith('{')) parsed = JSON.parse(brief); } catch {}
+
+  const complaint = parsed?.chief_complaint || extractSection(brief, 'CHIEF COMPLAINT') || '—';
+  const history   = parsed?.relevant_history || extractSection(brief, 'RELEVANT HISTORY') || '—';
+  const docs      = parsed?.documents || extractSection(brief, 'UPLOADED DOCUMENTS') || 'No documents uploaded';
+  const flags     = parsed?.flags || extractSection(brief, 'FLAGS') || '';
+  const summary   = parsed?.summary || extractSection(brief, 'INTAKE SUMMARY') || brief.slice(0, 200);
+
+  return `
+    <div class="brief-card">
+      <div class="bc-row"><div class="bc-label">Chief Complaint</div><div class="bc-value">${escHtml(complaint)}</div></div>
+      <div class="bc-row"><div class="bc-label">History</div><div class="bc-value">${escHtml(history)}</div></div>
+      <div class="bc-row"><div class="bc-label">Documents</div><div class="bc-value">${escHtml(docs)}</div></div>
+      ${flags ? `<div class="bc-flag"><div class="bc-label">⚠ Flags</div><div class="bc-value">${escHtml(flags)}</div></div>` : ''}
+      <div class="bc-row"><div class="bc-label">Summary</div><div class="bc-value" style="font-style:italic;color:var(--text-2)">${escHtml(summary.slice(0,300))}${summary.length>300?'…':''}</div></div>
+    </div>
+    <button class="btn-room${['consulted','prescription_ready'].includes(s.status)?' done':''}" id="room-btn"
+      onclick="markRoomEntry()">
+      ${['consulted','prescription_ready'].includes(s.status) ? '✓ Consultation in progress' : 'Patient entering room →'}
+    </button>
+  `;
+}
+
+function extractSection(text, heading) {
+  const re = new RegExp(`${heading}[:\\s]*([\\s\\S]*?)(?=\\n[A-Z\\s]{3,}:|$)`, 'i');
+  const m = text.match(re);
+  return m ? m[1].trim().slice(0, 300) : '';
+}
+
+function markRoomEntry() {
+  document.getElementById('consult-block').style.display = '';
+  const btn = document.getElementById('room-btn');
+  if (btn) { btn.className = 'btn-room done'; btn.textContent = '✓ Consultation in progress'; }
+}
+
+function renderRxCard(s) {
+  let draft = s.prescription_draft;
+  let parsed = null;
+  try { parsed = JSON.parse(draft); } catch {}
+  const formal = parsed?.formal_prescription || {};
+  const meds = formal.medications || [];
+  const verified = s.prescription_verified;
+
+  document.getElementById('rx-verified-badge').className = `rx-badge ${verified ? 'ok' : 'warn'}`;
+  document.getElementById('rx-verified-badge').textContent = verified ? '✓ AML Verified' : '⚠ Review Needed';
+
+  document.getElementById('rx-body-content').innerHTML = `
+    <h4>Patient</h4>
+    <div style="font-size:12.5px;font-weight:500;margin-bottom:4px">${escHtml(formal.patient_name || s.patient_name || 'Patient')}</div>
+    <h4>Diagnosis</h4>
+    <div style="margin-bottom:4px">${escHtml(formal.diagnosis || s.diagnosis || '—')}</div>
+    <h4>Medications</h4>
+    ${meds.map((m,i) => `
+      <div class="rx-med">
+        <div class="rx-med-name">${i+1}. ${escHtml(m.name)}</div>
+        <div class="rx-med-details">${escHtml(m.dosage)} · ${escHtml(m.frequency)} · ${escHtml(m.duration)}</div>
+        ${m.instructions ? `<div class="rx-med-details" style="color:var(--text-3)">${escHtml(m.instructions)}</div>` : ''}
+      </div>
+    `).join('') || '<div style="color:var(--text-3);font-size:12px">No medications</div>'}
+    <h4>Follow-up</h4>
+    <div>${escHtml(formal.follow_up_date || '—')}</div>
+  `;
+}
+
+// ── CONSULTATION ──────────────────────────────────────────────────────────────
+let medCount = 0;
+function addMed() {
+  const id = `med-${++medCount}`;
+  const div = document.createElement('div');
+  div.className = 'med-item';
+  div.id = id;
+  div.innerHTML = `
+    <button class="rm-btn" onclick="document.getElementById('${id}').remove()">×</button>
+    <div class="med-row">
+      <div class="med-f"><label>Drug Name</label><input class="mname" placeholder="e.g. Amoxicillin 500mg"></div>
+      <div class="med-f"><label>Dosage</label><input class="mdose" placeholder="1 tab"></div>
+    </div>
+    <div class="med-row">
+      <div class="med-f"><label>Frequency</label><input class="mfreq" placeholder="Twice daily"></div>
+      <div class="med-f"><label>Duration</label><input class="mdur" placeholder="5 days"></div>
+    </div>
+    <div class="med-f" style="margin-top:4px"><label>Instructions</label><input class="minst" placeholder="After meals"></div>
+  `;
+  document.getElementById('med-list').appendChild(div);
+}
+
+async function generateRx() {
+  if (!DS.selectedId) { showToast('No patient selected'); return; }
+
+  const meds = [...document.querySelectorAll('.med-item')].map(el => ({
+    name: el.querySelector('.mname')?.value || '',
+    dosage: el.querySelector('.mdose')?.value || '',
+    frequency: el.querySelector('.mfreq')?.value || '',
+    duration: el.querySelector('.mdur')?.value || '',
+    instructions: el.querySelector('.minst')?.value || '',
+  })).filter(m => m.name);
+
+  const btn = document.getElementById('gen-rx-btn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying with AML…';
+
+  const s = DS.selectedSession || {};
+  const payload = {
+    thread_id: DS.selectedId,
+    clinic_id: DS.clinicId || s.clinic_id || 'general_practice',
+    diagnosis: document.getElementById('c-diagnosis').value,
+    doctor_notes: document.getElementById('c-notes').value,
+    prescribed_medications: meds,
+    follow_up_date: document.getElementById('c-followup-date').value,
+    follow_up_instructions: document.getElementById('c-followup-inst').value,
+    patient_name: s.patient_name || 'Patient',
+    patient_dob: s.patient_dob || '',
+    patient_contact: s.patient_contact || '',
+    locale: 'en',
+  };
+
+  try {
+    const r = await fetch('/consultation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json();
+    showToast('Prescription generated ✓');
+    await loadSessions();
+    await selectSession(DS.selectedId);
+  } catch {
+    showToast('Error generating prescription');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Generate Prescription';
+}
+
+function downloadRx() {
+  if (!DS.selectedId) return;
+  window.open(`/static/prescriptions/${DS.selectedId}.pdf`, '_blank');
+}
+function sendWhatsApp() { showToast('Configure TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN in .env'); }
+
+// ── WIZARD STATE ──────────────────────────────────────────────────────────────
+const WZ = { step: 1, specialty: null, defaultProtocol: null, docOverrides: {} };
+
+// ── OPEN / CLOSE ──────────────────────────────────────────────────────────────
+function openSetup() {
+  WZ.step = 1; WZ.specialty = null; WZ.defaultProtocol = null; WZ.docOverrides = {};
+  renderWizardStep(1);
+  // Pre-select saved specialty if returning
+  const savedSpec = localStorage.getItem('elixire_clinic_specialty');
+  if (savedSpec) {
+    const card = document.querySelector(`.specialty-card[onclick*="'${savedSpec}'"]`);
+    selectSpecialty(savedSpec, card);
+  }
+  if (DS.clinicId) {
+    document.getElementById('s-name').value = localStorage.getItem('elixire_clinic_name') || '';
+    document.getElementById('s-doctor').value = localStorage.getItem('elixire_clinic_doctor') || '';
+  }
+  document.getElementById('setup-overlay').classList.add('visible');
+}
+
+function closeSetup() {
+  document.getElementById('setup-overlay').classList.remove('visible');
+}
+
+// ── WIZARD NAVIGATION ─────────────────────────────────────────────────────────
+function renderWizardStep(n) {
+  [1, 2, 3, 4].forEach(i => {
+    const panel = document.getElementById(`wstep-${i}`);
+    if (panel) panel.style.display = i === n ? '' : 'none';
+    const stepEl = document.getElementById(`ws-${i}`);
+    if (!stepEl) return;
+    stepEl.classList.remove('active', 'done');
+    if (i < n) stepEl.classList.add('done');
+    else if (i === n) stepEl.classList.add('active');
+  });
+  WZ.step = n;
+}
+
+async function wizardNext() {
+  if (WZ.step === 1) {
+    if (!WZ.specialty) { showToast('Please choose a specialty'); return; }
+    fetchDefaultProtocol(WZ.specialty);
+    renderWizardStep(2);
+  } else if (WZ.step === 2) {
+    const name = document.getElementById('s-name').value.trim();
+    const doctor = document.getElementById('s-doctor').value.trim();
+    if (!name || !doctor) { showToast('Clinic name and doctor name are required'); return; }
+    await renderStep3();
+    renderWizardStep(3);
+  }
+}
+
+function wizardBack() {
+  if (WZ.step > 1) renderWizardStep(WZ.step - 1);
+}
+
+// ── STEP 1: SPECIALTY ─────────────────────────────────────────────────────────
+function selectSpecialty(spec, cardEl) {
+  WZ.specialty = spec;
+  document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('selected'));
+  if (cardEl) cardEl.classList.add('selected');
+  document.getElementById('w1-next').disabled = false;
+  const labels = { general_practice: 'General Practice', ophthalmology: 'Ophthalmology', dental: 'Dental', custom: 'Custom' };
+  const el = document.getElementById('s-specialty-display');
+  if (el) el.value = labels[spec] || spec;
+}
+
+// ── STEP 2→3: FETCH DEFAULT PROTOCOL ─────────────────────────────────────────
+async function fetchDefaultProtocol(specialty) {
+  if (specialty === 'custom') { WZ.defaultProtocol = null; return; }
+  try {
+    const r = await fetch(`/defaults/${specialty}`);
+    if (r.ok) WZ.defaultProtocol = await r.json();
+  } catch { WZ.defaultProtocol = null; }
+}
+
+async function renderStep3() {
+  if (!WZ.defaultProtocol && WZ.specialty !== 'custom') await fetchDefaultProtocol(WZ.specialty);
+  const container = document.getElementById('w3-docs-container');
+  const aptList = document.getElementById('w3-apt-list');
+
+  if (!WZ.defaultProtocol || WZ.specialty === 'custom') {
+    container.innerHTML = `<div style="color:var(--text-3);font-size:12px;padding:12px;text-align:center">Custom specialty — no default documents loaded. You can configure requirements later.</div>`;
+    aptList.innerHTML = '';
+    return;
+  }
+
+  // Collect unique docs across all appointment types
+  const allDocs = {};
+  for (const apt of (WZ.defaultProtocol.appointment_types || [])) {
+    for (const doc of (apt.required_documents || [])) {
+      if (!allDocs[doc.document_type]) {
+        allDocs[doc.document_type] = { ...doc };
+        if (WZ.docOverrides.hasOwnProperty(doc.document_type)) {
+          allDocs[doc.document_type].required = WZ.docOverrides[doc.document_type];
+        }
+      }
+    }
+  }
+
+  if (Object.keys(allDocs).length === 0) {
+    container.innerHTML = `<div style="color:var(--text-3);font-size:12px;padding:12px;text-align:center">No document requirements for this specialty.</div>`;
+  } else {
+    container.innerHTML = Object.values(allDocs).map(doc => `
+      <div class="doc-toggle">
+        <div class="doc-toggle-info">
+          <div class="doc-toggle-label">${escHtml(doc.label)}</div>
+          <div class="doc-toggle-desc">${escHtml(doc.description || '')}</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" data-dtype="${doc.document_type}" ${doc.required ? 'checked' : ''}
+            onchange="WZ.docOverrides[this.dataset.dtype] = this.checked">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    `).join('');
+  }
+
+  aptList.innerHTML = (WZ.defaultProtocol.appointment_types || []).map(a =>
+    `<span style="padding:3px 10px;background:var(--accent-dim);border:1px solid rgba(15,159,122,.2);border-radius:20px;font-size:11px;color:var(--accent)">${escHtml(a.type_name)}</span>`
+  ).join('');
+}
+
+// ── SAVE CLINIC (Step 3 → Step 4) ────────────────────────────────────────────
+async function saveClinic() {
+  const btn = document.getElementById('w3-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const name   = document.getElementById('s-name').value.trim();
+  const doctor = document.getElementById('s-doctor').value.trim();
+  const qual   = document.getElementById('s-qual').value.trim();
+  const addr   = document.getElementById('s-address').value.trim();
+  const phone  = document.getElementById('s-phone').value.trim();
+
+  let appointmentTypes;
+  if (WZ.defaultProtocol) {
+    appointmentTypes = WZ.defaultProtocol.appointment_types.map(apt => ({
+      ...apt,
+      required_documents: apt.required_documents.map(doc => ({
+        ...doc,
+        required: WZ.docOverrides.hasOwnProperty(doc.document_type)
+          ? WZ.docOverrides[doc.document_type]
+          : doc.required
+      }))
+    }));
+  } else {
+    appointmentTypes = [{
+      type_id: 'general_consultation', type_name: 'General Consultation',
+      required_patient_info: ['full_name', 'date_of_birth', 'contact_number'],
+      required_symptom_questions: ['What brings you in today?', 'How long have you had this?'],
+      required_documents: [],
+      required_history_fields: ['current_medications', 'known_allergies'],
+      consultation_form_fields: ['diagnosis', 'medications_prescribed', 'follow_up_date'],
+      prescription_template: 'general_standard',
+    }];
+  }
+
+  const payload = {
+    clinic_id: DS.clinicId || 'new',
+    clinic_name: name, specialty: WZ.specialty,
+    doctor_name: doctor, doctor_qualifications: qual,
+    clinic_address: addr, clinic_phone: phone,
+    appointment_types: appointmentTypes,
+  };
+
+  try {
+    const r = await fetch('/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await r.json();
+    if (!r.ok) { showToast('Error: ' + (data.error || 'Save failed')); btn.disabled = false; btn.textContent = 'Save & Generate Key →'; return; }
+
+    DS.clinicId = data.clinic_id;
+    localStorage.setItem('elixire_clinic_id', data.clinic_id);
+    localStorage.setItem('elixire_clinic_name', name);
+    localStorage.setItem('elixire_clinic_doctor', doctor);
+    localStorage.setItem('elixire_clinic_specialty', WZ.specialty);
+
+    document.getElementById('nav-clinic').textContent = name;
+    updateSidebarKey(data.clinic_id);
+
+    document.getElementById('w4-key').textContent = data.clinic_id;
+    document.getElementById('w4-direct-url').textContent = `${location.origin}/?clinic=${data.clinic_id}`;
+
+    renderWizardStep(4);
+    await loadSessions();
+  } catch {
+    showToast('Error saving clinic');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Save & Generate Key →';
+}
+
+// ── COPY ACTIONS ──────────────────────────────────────────────────────────────
+function copyClinicKey() {
+  navigator.clipboard.writeText(document.getElementById('w4-key').textContent)
+    .then(() => showToast('Clinic key copied!'));
+}
+function copyDirectLink() {
+  navigator.clipboard.writeText(document.getElementById('w4-direct-url').textContent)
+    .then(() => showToast('Patient link copied!'));
+}
+
+// ── SIDEBAR KEY WIDGET ────────────────────────────────────────────────────────
+function updateSidebarKey(keyId) {
+  const widget = document.getElementById('sidebar-clinic-key');
+  const keyText = document.getElementById('sck-key-text');
+  if (!widget || !keyText) return;
+  if (keyId) { keyText.textContent = keyId; widget.style.display = ''; }
+  else { widget.style.display = 'none'; }
+}
+function copySidebarKey() {
+  const key = document.getElementById('sck-key-text').textContent;
+  navigator.clipboard.writeText(key).then(() => showToast('Clinic key copied!'));
+}
+function openNewPatientTab() {
+  const url = DS.clinicId ? `/?clinic=${DS.clinicId}` : '/';
+  window.open(url, '_blank');
+}
+
+// ── PANEL COLLAPSE ────────────────────────────────────────────────────────────
+function togglePanelBlock(head) {
+  const body = head.nextElementSibling;
+  body.classList.toggle('open');
+  head.querySelector('span:last-child').textContent = body.classList.contains('open') ? '›' : '›';
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

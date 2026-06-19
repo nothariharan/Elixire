@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Elixire — AI Nurse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:    #0F9F7A;
+    --accent-2:  #0D8A6A;
+    --accent-dim:rgba(15,159,122,.12);
+    --accent-glow:rgba(15,159,122,.35);
+    --bg:        #FAFBFC;
+    --bg-dark:   #0D1117;
+    --text:      #111827;
+    --text-2:    #6B7280;
+    --text-3:    #9CA3AF;
+    --border:    #E5E7EB;
+    --danger:    #EF4444;
+    --success:   #10B981;
+    --white:     #FFFFFF;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── KIOSK MODE (default — TV / reception screen) ── */
+  body.kiosk {
+    background: #0D1117;
+    color: white;
+    overflow: hidden;
+    height: 100dvh;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; width: 100%; height: 100dvh; flex-direction: column; align-items: center; justify-content: center; }
+  .screen.active { display: flex; }
+
+  /* ────────────────────────────────────────────────────────────────
+     WELCOME SCREEN — kiosk splash
+  ──────────────────────────────────────────────────────────────── */
+  #s-welcome {
+    background: linear-gradient(160deg, #0D1117 60%, #0f2920 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-bg-circle {
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15,159,122,.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: breathe 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes breathe {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: .6; }
+    50%      { transform: translate(-50%,-50%) scale(1.08); opacity: 1; }
+  }
+
+  .welcome-content { text-align: center; z-index: 2; padding: 20px; }
+
+  .brand { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 48px; }
+  .brand-mark {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; color: white;
+    box-shadow: 0 0 40px rgba(15,159,122,.4);
+  }
+  .brand-name { font-size: 38px; font-weight: 600; color: white; letter-spacing: -.5px; }
+  .brand-name span { color: var(--accent); }
+
+  .welcome-tagline {
+    font-size: 22px;
+    font-weight: 300;
+    color: rgba(255,255,255,.7);
+    letter-spacing: -.2px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .welcome-clinic {
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 64px;
+    min-height: 24px;
+  }
+
+  /* Big tap button */
+  .tap-btn {
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    border: 2px solid rgba(15,159,122,.3);
+    background: var(--accent-dim);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: all .2s;
+    position: relative;
+    animation: tap-pulse 3s ease-in-out infinite;
+  }
+  .tap-btn::before, .tap-btn::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15,159,122,.2);
+    animation: ring-expand 3s ease-out infinite;
+  }
+  .tap-btn::before { width: 210px; height: 210px; animation-delay: 0s; }
+  .tap-btn::after  { width: 250px; height: 250px; animation-delay: .8s; }
+  @keyframes ring-expand {
+    0%   { transform: scale(.9); opacity: .6; }
+    100% { transform: scale(1.1); opacity: 0; }
+  }
+  @keyframes tap-pulse {
+    0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    50%      { box-shadow: 0 0 40px 10px var(--accent-glow); }
+  }
+  .tap-btn:hover { background: rgba(15,159,122,.2); border-color: var(--accent); }
+  .tap-btn:active { transform: scale(.96); }
+  .tap-icon { font-size: 52px; margin-bottom: 8px; }
+  .tap-label { font-size: 14px; font-weight: 500; color: rgba(255,255,255,.8); letter-spacing: .04em; text-transform: uppercase; }
+
+  .welcome-hint { margin-top: 40px; font-size: 13px; color: rgba(255,255,255,.3); }
+
+  /* Mode switch link */
+  .mode-switch { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: rgba(255,255,255,.25); cursor: pointer; text-decoration: none; }
+  .mode-switch:hover { color: rgba(255,255,255,.5); }
+
+  /* ────────────────────────────────────────────────────────────────
+     CONVERSATION SCREEN — the voice nurse UI
+  ──────────────────────────────────────────────────────────────── */
+  #s-talk {
+    background: #0D1117;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0;
+    position: relative;
+  }
+
+  /* Top bar */
+  .talk-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+    width: 100%;
+  }
+  .talk-brand { display: flex; align-items: center; gap: 9px; }
+  .talk-brand-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; }
+  .talk-brand-name { font-size: 17px; font-weight: 600; color: white; }
+  .talk-brand-name span { color: var(--accent); }
+
+  .agent-tag {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,.6);
+  }
+  .agent-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot {
+    0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    50%      { box-shadow: 0 0 0 4px rgba(15,159,122,.15); }
+  }
+
+  .talk-session-id { font-size: 10px; color: rgba(255,255,255,.2); font-family: monospace; }
+
+  /* Center — avatar + transcript */
+  .talk-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 40px;
+    gap: 28px;
+    overflow: hidden;
+  }
+
+  /* Avatar circle */
+  .avatar {
+    position: relative;
+    width: 140px; height: 140px;
+    flex-shrink: 0;
+  }
+  .avatar-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(15,159,122,.25);
+    transition: all .4s;
+  }
+  .avatar-core {
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15,159,122,.25) 0%, rgba(15,159,122,.08) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    transition: all .4s;
+  }
+  /* States */
+  .avatar.idle .avatar-ring { animation: avatar-breathe 3s ease-in-out infinite; }
+  .avatar.speaking .avatar-ring { border-color: var(--accent); box-shadow: 0 0 0 8px rgba(15,159,122,.12), 0 0 30px rgba(15,159,122,.3); animation: avatar-speak 0.6s ease-in-out infinite alternate; }
+  .avatar.listening .avatar-ring { border-color: #3B82F6; box-shadow: 0 0 0 8px rgba(59,130,246,.12), 0 0 30px rgba(59,130,246,.3); animation: avatar-listen 0.4s ease-in-out infinite alternate; }
+  .avatar.thinking .avatar-ring { border-color: rgba(245,158,11,.6); animation: avatar-think 1s linear infinite; }
+
+  @keyframes avatar-breathe { 0%,100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.04); opacity: 1; } }
+  @keyframes avatar-speak   { from { transform: scale(1); box-shadow: 0 0 0 4px rgba(15,159,122,.15); } to { transform: scale(1.06); box-shadow: 0 0 0 14px rgba(15,159,122,.06); } }
+  @keyframes avatar-listen  { from { transform: scale(1); } to { transform: scale(1.04); box-shadow: 0 0 0 12px rgba(59,130,246,.06); } }
+  @keyframes avatar-think   { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* Waveform bars (shown when speaking) */
+  .waveform {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+  }
+  .waveform.visible { display: flex; }
+  .wbar {
+    width: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: wbar 0.8s ease-in-out infinite alternate;
+  }
+  .wbar:nth-child(1) { animation-delay: 0s;   height: 8px; }
+  .wbar:nth-child(2) { animation-delay: .1s;  height: 20px; }
+  .wbar:nth-child(3) { animation-delay: .2s;  height: 32px; }
+  .wbar:nth-child(4) { animation-delay: .3s;  height: 20px; }
+  .wbar:nth-child(5) { animation-delay: .4s;  height: 12px; }
+  .wbar:nth-child(6) { animation-delay: .5s;  height: 24px; }
+  .wbar:nth-child(7) { animation-delay: .6s;  height: 16px; }
+  @keyframes wbar { to { height: 6px; opacity: .5; } }
+
+  /* Transcript bubbles */
+  .transcript {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: calc(100dvh - 380px);
+    padding: 4px 2px;
+    scrollbar-width: none;
+  }
+  .transcript::-webkit-scrollbar { display: none; }
+
+  .tbubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 16px;
+    line-height: 1.55;
+    max-width: 86%;
+    animation: bubble-in .25s ease;
+    word-break: break-word;
+  }
+  @keyframes bubble-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .tbubble.ai {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 4px 14px 14px 14px;
+    color: rgba(255,255,255,.9);
+    align-self: flex-start;
+  }
+  .tbubble.patient {
+    background: rgba(15,159,122,.18);
+    border: 1px solid rgba(15,159,122,.25);
+    border-radius: 14px 4px 14px 14px;
+    color: white;
+    align-self: flex-end;
+  }
+  .tbubble-label { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 5px; }
+
+  /* Status text below avatar */
+  .status-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255,255,255,.5);
+    letter-spacing: .03em;
+    min-height: 22px;
+    text-align: center;
+    transition: all .3s;
+  }
+  .status-text.listening { color: #60A5FA; }
+  .status-text.speaking  { color: var(--accent); }
+  .status-text.thinking  { color: rgba(245,158,11,.8); }
+
+  /* Live transcript (what patient is saying right now) */
+  .live-transcript {
+    font-size: 18px;
+    color: rgba(255,255,255,.6);
+    text-align: center;
+    min-height: 28px;
+    font-style: italic;
+    max-width: 600px;
+    transition: all .2s;
+  }
+  .live-transcript.final { color: white; font-style: normal; }
+
+  /* Bottom controls */
+  .talk-controls {
+    padding: 20px 28px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+
+  .mic-btn {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 2px solid rgba(15,159,122,.4);
+    background: rgba(15,159,122,.1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 28px;
+    position: relative;
+  }
+  .mic-btn:hover { background: rgba(15,159,122,.2); border-color: var(--accent); }
+  .mic-btn.active {
+    background: rgba(59,130,246,.2);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 8px rgba(59,130,246,.1);
+    animation: mic-active 1s ease-in-out infinite;
+  }
+  .mic-btn.active::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(59,130,246,.3);
+    animation: mic-ring 1s ease-out infinite;
+  }
+  @keyframes mic-active { 0%,100% { box-shadow: 0 0 0 6px rgba(59,130,246,.1); } 50% { box-shadow: 0 0 0 12px rgba(59,130,246,.05); } }
+  @keyframes mic-ring { from { transform: scale(1); opacity: .6; } to { transform: scale(1.3); opacity: 0; } }
+
+  .ctrl-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.05);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all .15s;
+    color: rgba(255,255,255,.5);
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,.1); color: white; }
+
+  .upload-btn-kiosk {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.5);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+  }
+  .upload-btn-kiosk:hover { background: rgba(255,255,255,.1); color: white; }
+
+  /* Doc chips */
+  .doc-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+  .doc-chip {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(15,159,122,.15);
+    border: 1px solid rgba(15,159,122,.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,.7);
+  }
+
+  /* ── DONE SCREEN ── */
+  #s-done {
+    background: linear-gradient(160deg, #0D1117 60%, #0a2018 100%);
+    text-align: center;
+    padding: 40px;
+  }
+  .done-glow {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16,185,129,.3), transparent 70%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    margin: 0 auto 28px;
+    animation: breathe 3s ease-in-out infinite;
+  }
+  #s-done h1 { font-size: 32px; font-weight: 600; color: white; margin-bottom: 10px; }
+  #s-done p  { font-size: 18px; color: rgba(255,255,255,.55); margin-bottom: 6px; }
+  .done-ref  { font-size: 12px; color: rgba(255,255,255,.2); font-family: monospace; margin-top: 16px; }
+  .done-restart {
+    margin-top: 48px;
+    padding: 12px 32px;
+    background: rgba(15,159,122,.15);
+    border: 1px solid rgba(15,159,122,.3);
+    border-radius: 24px;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .done-restart:hover { background: rgba(15,159,122,.25); }
+
+  /* ── STANDARD (NON-KIOSK) MODE ── */
+  body:not(.kiosk) { background: #F7F9FC; }
+  body:not(.kiosk) #s-welcome { background: white; }
+  body:not(.kiosk) .welcome-bg-circle { background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%); }
+  body:not(.kiosk) .brand-name { color: var(--text); }
+  body:not(.kiosk) .brand-mark { box-shadow: none; }
+  body:not(.kiosk) .tap-btn { background: var(--accent-dim); border-color: rgba(15,159,122,.3); }
+  body:not(.kiosk) .tap-btn::before, body:not(.kiosk) .tap-btn::after { border-color: rgba(15,159,122,.15); }
+  body:not(.kiosk) .welcome-tagline { color: var(--text-2); }
+  body:not(.kiosk) .welcome-hint { color: var(--text-3); }
+  body:not(.kiosk) .tap-label { color: var(--text-2); }
+  body:not(.kiosk) .mode-switch { color: var(--text-3); }
+
+  /* Emergency */
+  .emergency {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(239,68,68,.97);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .emergency.visible { display: flex; }
+  .emergency-box { background: white; border-radius: 20px; padding: 36px; max-width: 460px; width: 100%; text-align: center; }
+  .em-icon { font-size: 48px; margin-bottom: 12px; }
+  .em-title { font-size: 24px; font-weight: 700; color: var(--danger); margin-bottom: 8px; }
+  .em-reason { font-size: 15px; color: var(--text-2); margin-bottom: 20px; }
+  .helplines { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .helpline { display: flex; justify-content: space-between; background: #FEF2F2; border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+  .helpline span:last-child { font-weight: 700; color: var(--danger); }
+  .btn-em-clear { padding: 12px 28px; border: 2px solid var(--danger); background: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--danger); cursor: pointer; }
+  .btn-em-clear:hover { background: var(--danger); color: white; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px); background: rgba(0,0,0,.85); color: white; padding: 9px 18px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all .2s; z-index: 50; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── KEY ENTRY SCREEN ── */
+  #s-keyentry {
+    background: linear-gradient(160deg, #0D1117 60%, #0f2920 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .keyentry-content {
+    text-align: center;
+    z-index: 2;
+    padding: 40px 24px;
+    width: 100%;
+    max-width: 440px;
+  }
+  .keyentry-logo { margin-bottom: 36px; }
+  .keyentry-title { font-size: 22px; font-weight: 600; color: white; margin-bottom: 8px; letter-spacing: -.3px; }
+  .keyentry-sub { font-size: 14px; color: rgba(255,255,255,.5); margin-bottom: 32px; line-height: 1.5; }
+  .key-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: white;
+    outline: none;
+    text-align: center;
+    letter-spacing: .04em;
+    transition: border-color .2s;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .key-input::placeholder { color: rgba(255,255,255,.25); letter-spacing: .02em; font-family: 'DM Sans', sans-serif; }
+  .key-input:focus { border-color: var(--accent); }
+  .key-input.error { border-color: var(--danger); }
+  .key-error-msg { font-size: 12px; color: #F87171; margin-bottom: 12px; min-height: 18px; }
+  .key-enter-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: -.1px;
+    position: relative;
+  }
+  .key-enter-btn:hover { background: var(--accent-2); }
+  .key-enter-btn:disabled { opacity: .45; cursor: default; }
+  .key-enter-btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Hidden file input */
+  #file-input { display: none; }
+</style>
+</head>
+<body class="kiosk">
+
+<!-- ── KEY ENTRY SCREEN ── -->
+<div class="screen active" id="s-keyentry">
+  <div class="welcome-bg-circle"></div>
+  <div class="keyentry-content">
+    <div class="keyentry-logo">
+      <div class="brand" style="margin-bottom:0">
+        <div class="brand-mark">E</div>
+        <div class="brand-name">Elixi<span>re</span></div>
+      </div>
+    </div>
+    <div style="margin-top:36px">
+      <div class="keyentry-title">Enter Your Clinic Key</div>
+      <div class="keyentry-sub">Ask the clinic staff for your unique key.<br>This connects you to the right intake form.</div>
+      <input class="key-input" id="clinic-key-input"
+        type="text"
+        placeholder="Paste clinic key here…"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="onKeyInput(this.value)"
+        onkeydown="if(event.key==='Enter') enterClinicKey()">
+      <div class="key-error-msg" id="key-error-msg"></div>
+      <button class="key-enter-btn" id="key-enter-btn" onclick="enterClinicKey()" disabled>
+        Enter Clinic
+      </button>
+      <div style="margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);text-align:center">
+        Elixire General Clinic key: <span style="font-family:monospace;color:rgba(255,255,255,.5)">general_practice</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── WELCOME SCREEN ── -->
+<div class="screen" id="s-welcome">
+  <div class="welcome-bg-circle"></div>
+  <div class="welcome-content">
+    <div class="brand">
+      <div class="brand-mark">E</div>
+      <div class="brand-name">Elixi<span>re</span></div>
+    </div>
+    <div class="welcome-tagline">Your AI clinic assistant.<br>I'll get you ready to see the doctor.</div>
+    <div class="welcome-clinic" id="clinic-display">Loading clinic…</div>
+
+    <div class="tap-btn" onclick="beginSession()" id="tap-btn">
+      <div class="tap-icon">🎙</div>
+      <div class="tap-label">Tap to Begin</div>
+    </div>
+
+    <div class="welcome-hint">Speak naturally — I'll guide you through</div>
+  </div>
+
+  <a class="mode-switch" href="#" onclick="toggleKiosk(); return false;" id="mode-link">Switch to text mode</a>
+</div>
+
+<!-- ── CONVERSATION SCREEN ── -->
+<div class="screen" id="s-talk">
+  <div class="talk-topbar">
+    <div class="talk-brand">
+      <div class="talk-brand-mark">E</div>
+      <div class="talk-brand-name">Elixi<span>re</span></div>
+    </div>
+    <div class="agent-tag">
+      <div class="agent-tag-dot"></div>
+      <span id="agent-label">AI Receptionist</span>
+    </div>
+    <div class="talk-session-id" id="session-ref">—</div>
+  </div>
+
+  <div class="talk-center">
+    <!-- Avatar -->
+    <div class="avatar idle" id="avatar">
+      <div class="avatar-ring"></div>
+      <div class="avatar-core">🩺</div>
+    </div>
+
+    <!-- Waveform (speaking indicator) -->
+    <div class="waveform" id="waveform">
+      <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+      <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+      <div class="wbar"></div>
+    </div>
+
+    <div class="status-text" id="status-text">Ready</div>
+
+    <!-- Live interim transcript -->
+    <div class="live-transcript" id="live-transcript"></div>
+
+    <!-- Conversation transcript -->
+    <div class="transcript" id="transcript"></div>
+
+    <!-- Doc chips -->
+    <div class="doc-chips" id="doc-chips"></div>
+  </div>
+
+  <div class="talk-controls">
+    <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+    <button class="upload-btn-kiosk" onclick="document.getElementById('file-input').click()">📎 Upload Document</button>
+    <div class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Tap to speak">🎙</div>
+    <div class="ctrl-btn" onclick="replayLast()" title="Replay last message">🔊</div>
+  </div>
+</div>
+
+<!-- ── DONE SCREEN ── -->
+<div class="screen" id="s-done">
+  <div class="done-glow">✓</div>
+  <h1>You're all set!</h1>
+  <p>Your intake is complete.</p>
+  <p id="done-doctor-line" style="color:var(--accent)">The doctor is being notified now.</p>
+  <div class="done-ref" id="done-ref">—</div>
+  <button class="done-restart" onclick="restartKiosk()">← Start New Patient</button>
+</div>
+
+<!-- EMERGENCY -->
+<div class="emergency" id="emergency">
+  <div class="emergency-box">
+    <div class="em-icon">🚨</div>
+    <div class="em-title">Emergency Detected</div>
+    <p class="em-reason" id="em-reason">Please seek immediate care or call emergency services.</p>
+    <div class="helplines">
+      <div class="helpline"><span>Emergency (India)</span><span>112 / 108</span></div>
+      <div class="helpline"><span>Emergency (US)</span><span>911</span></div>
+      <div class="helpline"><span>iCall Mental Health</span><span>9152987821</span></div>
+    </div>
+    <button class="btn-em-clear" onclick="clearEmergency()">Understood — Dismiss</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const VOICE_NURSE   = 'en-IN-NeerjaNeural';   // female Indian English
+const VOICE_PATIENT = '';                      // not used (patient speaks)
+const STT_LANG      = 'en-IN';
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const K = {
+  clinicId:      null,
+  clinicName:    null,
+  doctorName:    null,
+  threadId:      null,
+  isKiosk:       true,
+  listening:     false,
+  speaking:      false,
+  awaitingReply: false,
+  uploadedDocs:  [],
+  lastAiText:    '',
+  recognition:   null,
+  currentAudio:  null,
+  agentName:     'AI Receptionist',
+};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  const params = new URLSearchParams(location.search);
+  K.isKiosk = params.get('mode') !== 'text';
+  applyMode();
+  document.getElementById('mode-link').textContent = K.isKiosk ? 'Switch to text mode' : 'Switch to kiosk mode';
+
+  // If ?clinic= URL param present, try to load it and skip key entry
+  const urlClinic = params.get('clinic') || params.get('clinic_id');
+  if (urlClinic) {
+    const ok = await loadClinicById(urlClinic);
+    if (ok) { goScreen('welcome'); return; }
+    // Invalid URL param — show key entry with pre-filled error
+    document.getElementById('clinic-key-input').value = urlClinic;
+    document.getElementById('key-error-msg').textContent = 'Clinic key not found. Please check with clinic staff.';
+    document.getElementById('clinic-key-input').classList.add('error');
+  }
+  // Pre-fill the default clinic key so the user can just press Enter
+  const keyInput = document.getElementById('clinic-key-input');
+  if (keyInput && !keyInput.value) {
+    keyInput.value = 'general_practice';
+    onKeyInput(keyInput.value);
+  }
+  // Default: show key entry screen (already active)
+})();
+
+// ── KEY ENTRY ─────────────────────────────────────────────────────────────────
+function onKeyInput(val) {
+  document.getElementById('key-enter-btn').disabled = val.trim().length < 6;
+  document.getElementById('clinic-key-input').classList.remove('error');
+  document.getElementById('key-error-msg').textContent = '';
+}
+
+async function enterClinicKey() {
+  const input = document.getElementById('clinic-key-input');
+  const key = input.value.trim();
+  if (!key) return;
+  const btn = document.getElementById('key-enter-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  document.getElementById('key-error-msg').textContent = '';
+  input.classList.remove('error');
+
+  const ok = await loadClinicById(key);
+
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  if (ok) {
+    goScreen('welcome');
+  } else {
+    input.classList.add('error');
+    document.getElementById('key-error-msg').textContent = 'Clinic key not found. Please check with clinic staff.';
+  }
+}
+
+async function loadClinicById(clinicId) {
+  try {
+    const r = await fetch(`/setup/${clinicId}`);
+    if (!r.ok) return false;
+    const d = await r.json();
+    K.clinicId   = clinicId;
+    K.clinicName = d.clinic_name;
+    K.doctorName = d.doctor_name;
+    const display = document.getElementById('clinic-display');
+    if (display) {
+      display.textContent = d.clinic_name + (d.doctor_name ? ' — ' + d.doctor_name : '');
+    }
+    return true;
+  } catch { return false; }
+}
+
+function applyMode() {
+  document.body.classList.toggle('kiosk', K.isKiosk);
+}
+
+function toggleKiosk() {
+  K.isKiosk = !K.isKiosk;
+  applyMode();
+  document.getElementById('mode-link').textContent = K.isKiosk ? 'Switch to text mode' : 'Switch to kiosk mode';
+}
+
+// ── BEGIN SESSION ─────────────────────────────────────────────────────────────
+async function beginSession() {
+  goScreen('talk');
+  setAvatar('thinking');
+  setStatus('Connecting to AI agents…', 'thinking');
+
+  K.threadId = null;
+  K.uploadedDocs = [];
+  K.lastAiText = '';
+  clearTranscript();
+
+  // Tell the server to start Band agents (staggered, no-op if already starting)
+  try { await fetch('/agents/start', { method: 'POST' }); } catch { /* server still booting */ }
+
+  // Poll until intake agents are connected in Band (up to 3 minutes)
+  const startMsgs = [
+    'Starting AI intake system',
+    'Connecting to Band network',
+    'Loading clinic protocols',
+    'AI agents initializing',
+    'Almost ready',
+  ];
+  let sMsgIdx = 0, sDots = 0;
+  const agentDeadline = Date.now() + 180000;
+  while (Date.now() < agentDeadline) {
+    try {
+      const s = await fetch('/agents/status').then(r => r.json());
+      if (s.ready) break;
+      sDots = (sDots + 1) % 4;
+      if (sDots === 0) sMsgIdx = (sMsgIdx + 1) % startMsgs.length;
+      const elapsed = Math.round(s.seconds_since_start || 0);
+      setStatus(`${startMsgs[sMsgIdx]}${'.'.repeat(sDots + 1)} (${elapsed}s)`, 'thinking');
+    } catch { /* server still booting */ }
+    await sleep(3000);
+  }
+
+  const controller = new AbortController();
+  const fetchTimeout = setTimeout(() => controller.abort(), 90000); // 90s hard timeout
+
+  try {
+    const res = await fetch('/intake', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        patient_name:     '',
+        appointment_type: 'general_consultation',
+        clinic_id:        K.clinicId || 'general_practice',
+        locale:           'en',
+        message:          "Hi, I'm here to see the doctor.",
+        uploaded_documents: [],
+      }),
+    });
+
+    // (waitTimer removed)
+    clearTimeout(fetchTimeout);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Server error ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data.status === 'emergency') { showEmergency(data.reason); return; }
+    if (data.status === 'error') throw new Error(data.error || 'Intake failed');
+
+    K.threadId = data.thread_id;
+    document.getElementById('session-ref').textContent = '#' + K.threadId.slice(0, 8);
+    document.getElementById('done-ref').textContent = 'Session: ' + K.threadId.slice(0, 8);
+
+    const questions = data.questions || [];
+    if (questions.length) {
+      // HITL question from intake — speak all questions as AI Intake Nurse
+      setAgent('AI Intake Nurse');
+      for (const q of questions) {
+        await aiSpeak(q, 'AI Intake Nurse');
+      }
+    } else {
+      // No questions yet — use a generic welcome
+      const greeting = `Hello! Welcome${K.clinicName ? ' to ' + K.clinicName : ''}. I'm your AI intake nurse. What brings you in today?`;
+      await aiSpeak(greeting, 'AI Intake Nurse');
+      setAgent('AI Intake Nurse');
+    }
+    startListening();
+
+  } catch (err) {
+    // (waitTimer removed)
+    clearTimeout(fetchTimeout);
+    setAvatar('idle');
+
+    const isTimeout = err.name === 'AbortError';
+    const msg = isTimeout
+      ? 'The AI agents are taking longer than expected. Please wait a moment and try again.'
+      : `Could not connect: ${err.message}. Make sure the server is running and try again.`;
+
+    setStatus('Connection failed', '');
+    showToast(isTimeout ? 'Timed out — tap to retry' : 'Connection error — tap to retry');
+
+    // Show error in transcript so it's obvious
+    addBubble('ai', msg, 'System');
+    await aiSpeak(msg, 'System');
+
+    // Offer retry after a moment — go back to welcome screen
+    await sleep(3000);
+    goScreen('welcome');
+  }
+}
+
+// ── TTS — AI SPEAKS ───────────────────────────────────────────────────────────
+async function aiSpeak(text, agentName) {
+  if (!text) return;
+  K.speaking = true;
+  K.lastAiText = text;
+  setAvatar('speaking');
+  setStatus('Speaking…', 'speaking');
+  showWaveform(true);
+
+  addBubble('ai', text, agentName || K.agentName);
+
+  try {
+    const url = '/tts?voice=' + encodeURIComponent(VOICE_NURSE) + '&text=' + encodeURIComponent(text);
+    const audio = new Audio(url);
+    K.currentAudio = audio;
+    await audio.play();
+    await new Promise((resolve, reject) => {
+      audio.addEventListener('ended', resolve);
+      audio.addEventListener('error', reject);
+    });
+  } catch {
+    // Fallback: browser TTS
+    await browserSpeak(text);
+  }
+
+  K.speaking = false;
+  showWaveform(false);
+  setAvatar('idle');
+  setStatus('Ready', '');
+}
+
+function browserSpeak(text) {
+  return new Promise(resolve => {
+    if (!window.speechSynthesis) { resolve(); return; }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'en-IN';
+    utt.rate = 0.95;
+    utt.pitch = 1.05;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en-IN') || v.lang.startsWith('en-GB'));
+    if (preferred) utt.voice = preferred;
+    utt.onend = resolve;
+    utt.onerror = resolve;
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+function replayLast() {
+  if (K.lastAiText) aiSpeak(K.lastAiText);
+}
+
+// ── STT — PATIENT SPEAKS ──────────────────────────────────────────────────────
+function setupRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = STT_LANG;
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    K.listening = true;
+    setAvatar('listening');
+    setStatus('Listening…', 'listening');
+    document.getElementById('mic-btn').classList.add('active');
+  };
+
+  r.onresult = e => {
+    let interim = '', final = '';
+    for (const res of e.results) {
+      if (res.isFinal) final += res[0].transcript;
+      else interim += res[0].transcript;
+    }
+    const lt = document.getElementById('live-transcript');
+    lt.textContent = final || interim;
+    lt.classList.toggle('final', !!final);
+    if (final) sendPatientMessage(final.trim());
+  };
+
+  r.onerror = err => {
+    if (err.error !== 'no-speech' && err.error !== 'aborted') {
+      console.warn('STT error:', err.error);
+      showToast('Microphone error — try typing below');
+    }
+    stopListening();
+  };
+
+  r.onend = () => {
+    stopListening();
+    document.getElementById('live-transcript').textContent = '';
+  };
+
+  return r;
+}
+
+function startListening() {
+  if (K.speaking || K.awaitingReply) return;
+  if (!K.recognition) K.recognition = setupRecognition();
+  if (!K.recognition) { showTextInput(); return; }
+  try {
+    K.recognition.start();
+  } catch {}
+}
+
+function stopListening() {
+  K.listening = false;
+  document.getElementById('mic-btn').classList.remove('active');
+  if (!K.speaking && !K.awaitingReply) {
+    setAvatar('idle');
+    setStatus('Ready', '');
+  }
+}
+
+function toggleMic() {
+  if (K.listening) {
+    try { K.recognition?.stop(); } catch {}
+    stopListening();
+  } else {
+    startListening();
+  }
+}
+
+// ── SEND MESSAGE TO BACKEND ───────────────────────────────────────────────────
+async function sendPatientMessage(text) {
+  if (!text || K.awaitingReply) return;
+  K.awaitingReply = true;
+
+  addBubble('patient', text);
+  document.getElementById('live-transcript').textContent = '';
+  setAvatar('thinking');
+  setStatus('Thinking…', 'thinking');
+
+  if (!K.threadId) {
+    await aiSpeak("No active session. Please go back and start a new session.", 'System');
+    K.awaitingReply = false;
+    return;
+  }
+
+  try {
+    const res = await fetch('/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thread_id: K.threadId, answer: text }),
+    });
+    const data = await res.json();
+    await handleServerResponse(data);
+  } catch (err) {
+    console.error('respond error:', err);
+    await aiSpeak("I had trouble reaching the AI. Please say that again — I'm still listening.", 'AI Intake Nurse');
+    showToast('Connection hiccup — please repeat your response');
+  }
+
+  K.awaitingReply = false;
+  startListening();
+}
+
+async function handleServerResponse(data) {
+  if (data.status === 'emergency') {
+    showEmergency(data.reason || data.message);
+    return;
+  }
+
+  if (data.status === 'requires_action' && data.questions?.length) {
+    setAgent('AI Intake Nurse');
+    for (const q of data.questions) {
+      await aiSpeak(q, 'AI Intake Nurse');
+    }
+    return;
+  }
+
+  if (data.doctor_brief || data.status === 'brief_ready') {
+    setAgent('AI Intake Nurse');
+    await aiSpeak("Thank you — I have everything I need. Let me prepare your information for the doctor now.", 'AI Intake Nurse');
+    await sleep(800);
+    await completeSession();
+    return;
+  }
+
+  if (data.status === 'complete') {
+    await completeSession();
+    return;
+  }
+
+  if (data.message) {
+    await aiSpeak(data.message);
+  }
+}
+
+async function completeSession() {
+  await aiSpeak("Your intake is complete. The doctor has been notified and will be with you shortly. Please have a seat.", 'AI Intake Nurse');
+  await sleep(1200);
+  goScreen('done');
+}
+
+
+// ── DOCUMENT UPLOAD ───────────────────────────────────────────────────────────
+function handleFiles(files) {
+  const chips = document.getElementById('doc-chips');
+  Array.from(files).forEach(f => {
+    K.uploadedDocs.push({ filename: f.name });
+    const chip = document.createElement('div');
+    chip.className = 'doc-chip';
+    chip.innerHTML = `<span>✓</span>${f.name}`;
+    chips.appendChild(chip);
+  });
+  if (files.length) {
+    aiSpeak(`Got it — I've received ${files.length === 1 ? files[0].name : files.length + ' documents'}. I'll make sure the doctor has these.`, 'AI Intake Nurse');
+  }
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+}
+
+function setAvatar(state) {
+  const a = document.getElementById('avatar');
+  a.className = 'avatar ' + state;
+}
+
+function setStatus(text, cls) {
+  const el = document.getElementById('status-text');
+  el.textContent = text;
+  el.className = 'status-text ' + (cls || '');
+}
+
+function setAgent(name) {
+  K.agentName = name;
+  document.getElementById('agent-label').textContent = name;
+}
+
+function showWaveform(on) {
+  document.getElementById('waveform').classList.toggle('visible', on);
+}
+
+function addBubble(role, text, agent) {
+  const t = document.getElementById('transcript');
+  const wrap = document.createElement('div');
+  if (role === 'ai' && agent) {
+    const lbl = document.createElement('div');
+    lbl.className = 'tbubble-label';
+    lbl.textContent = agent;
+    wrap.appendChild(lbl);
+  }
+  const b = document.createElement('div');
+  b.className = 'tbubble ' + role;
+  b.textContent = text;
+  wrap.appendChild(b);
+  t.appendChild(wrap);
+  t.scrollTop = t.scrollHeight;
+}
+
+function clearTranscript() {
+  document.getElementById('transcript').innerHTML = '';
+  document.getElementById('doc-chips').innerHTML = '';
+  document.getElementById('live-transcript').textContent = '';
+}
+
+function showTextInput() {
+  showToast('Voice not supported in this browser — use Chrome or Edge');
+}
+
+// ── EMERGENCY ─────────────────────────────────────────────────────────────────
+function showEmergency(reason) {
+  if (K.currentAudio) { K.currentAudio.pause(); }
+  window.speechSynthesis?.cancel();
+  document.getElementById('em-reason').textContent = reason || 'Emergency detected.';
+  document.getElementById('emergency').classList.add('visible');
+}
+function clearEmergency() {
+  document.getElementById('emergency').classList.remove('visible');
+}
+
+// ── RESTART ───────────────────────────────────────────────────────────────────
+function restartKiosk() {
+  K.threadId = null;
+  K.uploadedDocs = [];
+  K.lastAiText = '';
+  K.awaitingReply = false;
+  K.speaking = false;
+  K.listening = false;
+  K.clinicId = null;
+  K.clinicName = null;
+  K.doctorName = null;
+  if (K.recognition) { try { K.recognition.abort(); } catch {} K.recognition = null; }
+  if (K.currentAudio) { K.currentAudio.pause(); K.currentAudio = null; }
+  window.speechSynthesis?.cancel();
+  // Return to key entry for next patient
+  document.getElementById('clinic-key-input').value = '';
+  document.getElementById('key-enter-btn').disabled = true;
+  document.getElementById('key-error-msg').textContent = '';
+  document.getElementById('clinic-key-input').classList.remove('error');
+  goScreen('keyentry');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+</script>
+</body>
+</html>
