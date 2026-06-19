@@ -201,8 +201,21 @@
     border-color: rgba(15,159,122,.18);
   }
 
+  .avatar {
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: white;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .avatar.sm { width: 32px; height: 32px; font-size: 11px; }
+  .avatar.lg { width: 44px; height: 44px; font-size: 15px; }
+
+  .pi-main { display: flex; align-items: center; gap: 10px; }
+  .pi-main .pi-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+
   .pi-row { display: flex; align-items: center; gap: 6px; }
-  .pi-name { font-size: 12.5px; font-weight: 500; flex: 1; }
+  .pi-name { font-size: 12.5px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pi-apt { font-size: 11px; color: var(--text-3); }
   .pi-time { font-size: 10px; color: var(--text-3); white-space: nowrap; }
 
@@ -261,6 +274,7 @@
     flex-shrink: 0;
   }
 
+  .mh-patient { display: flex; align-items: center; gap: 12px; }
   .mh-patient h2 { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
   .mh-patient p  { font-size: 11px; color: var(--text-2); }
 
@@ -756,8 +770,11 @@
   <main class="main">
     <div class="main-header" id="main-header">
       <div class="mh-patient">
-        <h2 id="mh-name">No patient selected</h2>
-        <p id="mh-apt" style="color:var(--text-3)">Select a patient from the queue</p>
+        <div class="avatar lg" id="mh-avatar" style="display:none;background:var(--accent)">—</div>
+        <div>
+          <h2 id="mh-name">No patient selected</h2>
+          <p id="mh-apt" style="color:var(--text-3)">Select a patient from the queue</p>
+        </div>
       </div>
       <div class="agent-timeline" id="agent-timeline" style="display:none">
         <div class="agent-pill" id="ap-receptionist"><span class="dot"></span>Receptionist</div>
@@ -1027,7 +1044,7 @@ function startPolling() {
         renderRightPanel();
         setAgentStepFromLog(fresh);
         if (fresh.status === 'brief_ready') {
-          showToast('📋 Brief ready — ' + (fresh.patient_name || 'Patient'));
+          showToast('📋 Brief ready — ' + patientDisplay(fresh).name);
           const briefBody = document.getElementById('brief-body');
           if (briefBody && !briefBody.classList.contains('open')) briefBody.classList.add('open');
         }
@@ -1054,6 +1071,25 @@ async function loadSessions() {
   }
 }
 
+// ── PATIENT DISPLAY (name / initials / colour) ────────────────────────────────
+const AVATAR_COLORS = ['#14B88A','#1CB0F6','#A78BFA','#F59E0B','#EC4899','#0EA5E9','#10B981','#F97316'];
+
+function patientDisplay(s) {
+  const raw = (s.patient_name || '').trim();
+  const name = raw || `Patient #${(s.thread_id || '').slice(0, 4)}`;
+  let initials;
+  if (raw) {
+    const parts = raw.split(/\s+/);
+    initials = ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  } else {
+    initials = '#';
+  }
+  let hash = 0;
+  const seed = s.thread_id || raw || 'x';
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return { name, initials, color: AVATAR_COLORS[hash % AVATAR_COLORS.length] };
+}
+
 // ── PATIENT LIST ──────────────────────────────────────────────────────────────
 function renderPatientList(sessions) {
   const list = document.getElementById('patient-list');
@@ -1064,24 +1100,34 @@ function renderPatientList(sessions) {
     return;
   }
 
-  list.innerHTML = sessions.map(s => `
+  list.innerHTML = sessions.map(s => {
+    const d = patientDisplay(s);
+    return `
     <div class="patient-item${s.thread_id === DS.selectedId ? ' selected' : ''}" onclick="selectSession('${s.thread_id}')">
-      <div class="pi-row">
-        <span class="pi-name">${s.patient_name || 'Unknown'}</span>
-        <span class="status-pill pill-${statusClass(s.status)}">${statusLabel(s.status)}</span>
+      <div class="pi-main">
+        <div class="avatar sm" style="background:${d.color}">${escHtml(d.initials)}</div>
+        <div class="pi-body">
+          <div class="pi-row">
+            <span class="pi-name">${escHtml(d.name)}</span>
+            <span class="status-pill pill-${statusClass(s.status)}">${statusLabel(s.status)}</span>
+          </div>
+          <div class="pi-row">
+            <span class="pi-apt">${escHtml(s.appointment_type?.replace(/_/g,' ') || 'General')}</span>
+            <span class="pi-time">${timeAgo(s.created_at)}</span>
+          </div>
+        </div>
       </div>
-      <div class="pi-row">
-        <span class="pi-apt">${s.appointment_type?.replace(/_/g,' ') || 'General'}</span>
-        <span class="pi-time">${timeAgo(s.created_at)}</span>
-      </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function filterPatients(q) {
-  const filtered = DS.sessions.filter(s =>
-    !q || (s.patient_name || '').toLowerCase().includes(q.toLowerCase())
-  );
+  const ql = (q || '').toLowerCase();
+  const filtered = DS.sessions.filter(s => {
+    if (!ql) return true;
+    const d = patientDisplay(s);
+    return (s.patient_name || '').toLowerCase().includes(ql) || d.name.toLowerCase().includes(ql);
+  });
   renderPatientList(filtered);
 }
 
@@ -1140,8 +1186,14 @@ function setAgentStepFromLog(s) {
 }
 
 function renderSession(s) {
-  // Top bar
-  document.getElementById('mh-name').textContent = s.patient_name || 'Patient';
+  const d = patientDisplay(s);
+  const mhAvatar = document.getElementById('mh-avatar');
+  if (mhAvatar) {
+    mhAvatar.style.display = 'flex';
+    mhAvatar.style.background = d.color;
+    mhAvatar.textContent = d.initials;
+  }
+  document.getElementById('mh-name').textContent = d.name;
   document.getElementById('mh-apt').textContent = s.appointment_type?.replace(/_/g,' ') || '';
   document.getElementById('agent-timeline').style.display = 'flex';
   setAgentStepFromLog(s);
