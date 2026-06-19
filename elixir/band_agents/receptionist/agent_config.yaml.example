@@ -1,0 +1,3 @@
+my_agent:
+  agent_id: "<uuid-from-app.band.ai>"
+  api_key: "<band-api-key-shown-once>"
