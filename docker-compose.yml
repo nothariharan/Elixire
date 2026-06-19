@@ -1,0 +1,14 @@
+services:
+  elixir:
+    build:
+      context: ./elixir
+    ports:
+      - "8000:8000"
+    volumes:
+      - elixir_data:/app
+    env_file:
+      - ./elixir/.env
+    restart: unless-stopped
+
+volumes:
+  elixir_data:
