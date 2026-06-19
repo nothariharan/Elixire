@@ -1,0 +1,46 @@
+{
+  "clinic_id": "general_practice",
+  "clinic_name": "General Practice Clinic",
+  "specialty": "general_practice",
+  "doctor_name": "Doctor",
+  "doctor_qualifications": "MBBS",
+  "clinic_address": "",
+  "clinic_phone": "",
+  "appointment_types": [
+    {
+      "type_id": "general_consultation",
+      "type_name": "General Consultation",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "What is your main concern today?",
+        "How long have you had this problem?",
+        "Have you experienced this before?",
+        "Does anything make it better or worse?",
+        "Do you have any fever, chills, or night sweats?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "previous_prescription",
+          "label": "Previous prescription or discharge summary",
+          "required": false,
+          "description": "Any recent prescriptions or hospital discharge papers"
+        },
+        {
+          "document_type": "lab_report",
+          "label": "Recent lab reports",
+          "required": false,
+          "description": "Blood work, urine tests, or other recent investigations"
+        }
+      ],
+      "required_history_fields": [
+        "chronic_conditions", "surgical_history", "current_medications",
+        "known_allergies", "family_history", "smoking_alcohol"
+      ],
+      "consultation_form_fields": [
+        "diagnosis", "clinical_notes", "investigations_ordered",
+        "medications_prescribed", "follow_up_date", "referral"
+      ],
+      "prescription_template": "general_standard"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "clinic_id": "cardiology",
+  "clinic_name": "Cardiology Clinic",
+  "specialty": "cardiology",
+  "doctor_name": "Doctor",
+  "doctor_qualifications": "MD, DM (Cardiology)",
+  "clinic_address": "",
+  "clinic_phone": "",
+  "appointment_types": [
+    {
+      "type_id": "cardiac_consultation",
+      "type_name": "Cardiac Consultation",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "What symptoms have you been experiencing, and when did they start?",
+        "Do you have chest pain or tightness? If so, does it come on with exertion or at rest?",
+        "Do you experience shortness of breath during physical activity or while lying flat?",
+        "Do you have palpitations, a racing heart, or irregular heartbeat?",
+        "Have you noticed any swelling in your legs, ankles, or feet?",
+        "Have you ever felt dizzy, light-headed, or lost consciousness?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "ecg_report",
+          "label": "ECG / EKG report",
+          "required": false,
+          "description": "Most recent electrocardiogram from any previous evaluation"
+        },
+        {
+          "document_type": "echocardiogram",
+          "label": "Echocardiogram (2D Echo)",
+          "required": false,
+          "description": "Recent echocardiogram or stress echo report"
+        },
+        {
+          "document_type": "lipid_panel",
+          "label": "Lipid panel / cholesterol report",
+          "required": false,
+          "description": "Recent blood lipid and cholesterol levels"
+        },
+        {
+          "document_type": "previous_cardiac_report",
+          "label": "Previous cardiac consultation or discharge summary",
+          "required": false,
+          "description": "Any prior cardiology evaluation, angiogram, or hospital discharge summary"
+        }
+      ],
+      "required_history_fields": [
+        "hypertension",
+        "diabetes",
+        "smoking_status",
+        "family_cardiac_history",
+        "current_medications",
+        "known_allergies",
+        "previous_cardiac_events"
+      ],
+      "consultation_form_fields": [
+        "blood_pressure",
+        "heart_rate",
+        "diagnosis",
+        "clinical_notes",
+        "medications_prescribed",
+        "investigations_ordered",
+        "follow_up_weeks"
+      ],
+      "prescription_template": "cardiology_standard"
+    },
+    {
+      "type_id": "cardiac_followup",
+      "type_name": "Cardiac Follow-up",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "How have you been feeling since your last visit?",
+        "Have your symptoms improved, worsened, or stayed the same?",
+        "Are you taking all your prescribed medications regularly?",
+        "Have you had any new episodes of chest pain, breathlessness, or palpitations?",
+        "Have you made any changes to your diet or physical activity?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "recent_ecg",
+          "label": "Recent ECG (if done since last visit)",
+          "required": false,
+          "description": "Any ECG done after your last cardiac appointment"
+        },
+        {
+          "document_type": "blood_report",
+          "label": "Blood test results (lipids, HbA1c, kidney function)",
+          "required": false,
+          "description": "Recent blood investigations if ordered at last visit"
+        }
+      ],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "compliance_issues"
+      ],
+      "consultation_form_fields": [
+        "blood_pressure",
+        "heart_rate",
+        "weight",
+        "clinical_assessment",
+        "medication_adjustments",
+        "next_investigations",
+        "follow_up_weeks"
+      ],
+      "prescription_template": "cardiology_standard"
+    }
+  ]
+}

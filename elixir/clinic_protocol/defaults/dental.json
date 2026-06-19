@@ -1,0 +1,194 @@
+{
+  "clinic_id": "dental",
+  "clinic_name": "Dental Clinic",
+  "specialty": "dental",
+  "doctor_name": "Doctor",
+  "doctor_qualifications": "BDS",
+  "clinic_address": "",
+  "clinic_phone": "",
+  "appointment_types": [
+    {
+      "type_id": "routine_checkup",
+      "type_name": "Routine Dental Checkup",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "When did you last visit a dentist?",
+        "Are you experiencing any tooth pain or sensitivity to hot or cold?",
+        "Do you have any swollen gums or bleeding when brushing?",
+        "Have you noticed any loose, cracked, or broken teeth?",
+        "Are you currently using any dental appliances such as braces, dentures, or a night guard?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "dental_xray",
+          "label": "Previous dental X-ray",
+          "required": false,
+          "description": "Any recent OPG or periapical X-rays from a previous dentist"
+        },
+        {
+          "document_type": "dental_records",
+          "label": "Previous dental records or treatment history",
+          "required": false,
+          "description": "Records or summaries from your previous dentist"
+        },
+        {
+          "document_type": "insurance",
+          "label": "Dental insurance card or policy document",
+          "required": false,
+          "description": "Insurance information if applicable"
+        }
+      ],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "diabetes",
+        "hypertension",
+        "bleeding_disorders",
+        "heart_conditions"
+      ],
+      "consultation_form_fields": [
+        "diagnosis",
+        "teeth_involved",
+        "treatment_given",
+        "medications_prescribed",
+        "next_appointment"
+      ],
+      "prescription_template": "dental_standard"
+    },
+    {
+      "type_id": "tooth_extraction",
+      "type_name": "Tooth Extraction",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "Which tooth or area is causing the problem?",
+        "How long have you had this pain or issue?",
+        "Is the pain constant or does it come and go?",
+        "Have you tried any pain relief medication? If so, which ones?",
+        "Are you taking any blood thinners, heart medication, or diabetes medication?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "dental_xray",
+          "label": "Dental X-ray of the affected tooth",
+          "required": true,
+          "description": "X-ray to assess root structure and surrounding bone"
+        }
+      ],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "bleeding_disorders",
+        "diabetes",
+        "heart_conditions",
+        "blood_thinners"
+      ],
+      "consultation_form_fields": [
+        "tooth_number",
+        "extraction_type",
+        "anaesthesia_used",
+        "post_op_instructions",
+        "medications_prescribed"
+      ],
+      "prescription_template": "dental_standard"
+    },
+    {
+      "type_id": "root_canal",
+      "type_name": "Root Canal Treatment",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "Which tooth is affected?",
+        "Do you have persistent, severe, or throbbing tooth pain?",
+        "Is there any swelling around the tooth or in the gum?",
+        "Is the tooth sensitive to heat, cold, or pressure?",
+        "Has this tooth been treated or filled before?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "dental_xray",
+          "label": "Periapical X-ray of the affected tooth",
+          "required": true,
+          "description": "Essential for assessing root canals and extent of infection"
+        }
+      ],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "diabetes",
+        "immunosuppressed",
+        "bleeding_disorders"
+      ],
+      "consultation_form_fields": [
+        "tooth_number",
+        "canals_treated",
+        "obturation_material",
+        "follow_up_crown_needed",
+        "medications_prescribed"
+      ],
+      "prescription_template": "dental_standard"
+    },
+    {
+      "type_id": "orthodontics",
+      "type_name": "Orthodontic Consultation",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "Have you had braces or any orthodontic treatment before?",
+        "What concerns you most about your teeth or bite alignment?",
+        "Do you experience any jaw pain, clicking, or difficulty chewing?",
+        "Do you grind your teeth at night?",
+        "Are your wisdom teeth present or have they been removed?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "opg_xray",
+          "label": "OPG (panoramic jaw X-ray)",
+          "required": false,
+          "description": "Full jaw panoramic X-ray if available from a previous visit"
+        },
+        {
+          "document_type": "previous_ortho_records",
+          "label": "Previous orthodontic records or photos",
+          "required": false,
+          "description": "Old treatment records, photographs, or dental study models"
+        }
+      ],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "jaw_problems"
+      ],
+      "consultation_form_fields": [
+        "malocclusion_type",
+        "treatment_plan",
+        "estimated_duration",
+        "appliance_type",
+        "follow_up_date"
+      ],
+      "prescription_template": "dental_standard"
+    },
+    {
+      "type_id": "dental_emergency",
+      "type_name": "Dental Emergency",
+      "required_patient_info": ["full_name", "contact_number"],
+      "required_symptom_questions": [
+        "What is the emergency — severe pain, broken tooth, swelling, or injury?",
+        "When did this start?",
+        "Have you had any trauma or injury to the face or mouth?",
+        "Is there significant swelling, or do you have difficulty swallowing or breathing?"
+      ],
+      "required_documents": [],
+      "required_history_fields": [
+        "current_medications",
+        "known_allergies",
+        "bleeding_disorders"
+      ],
+      "consultation_form_fields": [
+        "emergency_type",
+        "treatment_given",
+        "referral_needed",
+        "follow_up_date",
+        "medications_prescribed"
+      ],
+      "prescription_template": "dental_standard"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "clinic_id": "ophthalmology",
+  "clinic_name": "Eye Clinic",
+  "specialty": "ophthalmology",
+  "doctor_name": "Doctor",
+  "doctor_qualifications": "MBBS, MS (Ophthalmology)",
+  "clinic_address": "",
+  "clinic_phone": "",
+  "appointment_types": [
+    {
+      "type_id": "routine_eye_exam",
+      "type_name": "Routine Eye Examination",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number", "current_glasses_or_contacts"],
+      "required_symptom_questions": [
+        "How long have you been experiencing vision changes?",
+        "Is the issue in one eye or both?",
+        "Do you experience headaches associated with your vision?",
+        "Any family history of glaucoma or macular degeneration?",
+        "Do you have difficulty with near vision, distant vision, or both?"
+      ],
+      "required_documents": [
+        {
+          "document_type": "previous_prescription",
+          "label": "Previous glasses or contact lens prescription",
+          "required": false,
+          "description": "Your most recent eyewear prescription if you have one"
+        },
+        {
+          "document_type": "previous_eye_report",
+          "label": "Previous eye examination report",
+          "required": false,
+          "description": "Any prior eye exam results or specialist reports"
+        }
+      ],
+      "required_history_fields": ["diabetes", "hypertension", "current_medications", "known_allergies"],
+      "consultation_form_fields": [
+        "visual_acuity_right", "visual_acuity_left",
+        "intraocular_pressure_right", "intraocular_pressure_left",
+        "diagnosis", "new_prescription", "follow_up_weeks"
+      ],
+      "prescription_template": "ophthalmology_standard"
+    },
+    {
+      "type_id": "emergency_eye",
+      "type_name": "Eye Emergency",
+      "required_patient_info": ["full_name", "date_of_birth", "contact_number"],
+      "required_symptom_questions": [
+        "When did the problem start?",
+        "Is there sudden vision loss or significant blurring?",
+        "Any eye pain, redness, or discharge?",
+        "Any recent eye injury or chemical exposure?"
+      ],
+      "required_documents": [],
+      "required_history_fields": ["current_medications", "known_allergies"],
+      "consultation_form_fields": ["diagnosis", "treatment_given", "referral_needed", "follow_up_date"],
+      "prescription_template": "general_standard"
+    }
+  ]
+}

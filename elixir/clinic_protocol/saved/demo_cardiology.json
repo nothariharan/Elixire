@@ -1,0 +1,48 @@
+{
+  "clinic_id": "demo_cardiology",
+  "clinic_name": "Heart Care Clinic",
+  "specialty": "cardiology",
+  "doctor_name": "Dr. Priya Sharma",
+  "doctor_qualifications": "MD, DM (Cardiology)",
+  "clinic_address": "",
+  "clinic_phone": "080-12345678",
+  "appointment_types": [
+    {
+      "type_id": "cardiac_consultation",
+      "type_name": "Cardiac Consultation",
+      "required_patient_info": [
+        "full_name",
+        "date_of_birth",
+        "contact_number"
+      ],
+      "required_symptom_questions": [
+        "What symptoms have you been experiencing, and when did they start?",
+        "Do you have chest pain or tightness? If so, does it come on with exertion or at rest?",
+        "Do you experience shortness of breath during physical activity or while lying flat?",
+        "Do you have palpitations, a racing heart, or irregular heartbeat?",
+        "Have you noticed any swelling in your legs, ankles, or feet?",
+        "Have you ever felt dizzy, light-headed, or lost consciousness?"
+      ],
+      "required_documents": [],
+      "required_history_fields": [
+        "hypertension",
+        "diabetes",
+        "smoking_status",
+        "family_cardiac_history",
+        "current_medications",
+        "known_allergies",
+        "previous_cardiac_events"
+      ],
+      "consultation_form_fields": [
+        "blood_pressure",
+        "heart_rate",
+        "diagnosis",
+        "clinical_notes",
+        "medications_prescribed",
+        "investigations_ordered",
+        "follow_up_weeks"
+      ],
+      "prescription_template": "cardiology_standard"
+    }
+  ]
+}
